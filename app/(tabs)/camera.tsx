@@ -16,7 +16,7 @@ export default function TabTwoScreen() {
   return (
     <View style={styles.container}>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Histórico</ThemedText>
+        <ThemedText type="title">Camera</ThemedText>
       </ThemedView>
 
       <ThemedText type="defaultSemiBold" style={{ textAlign: "center" }}>

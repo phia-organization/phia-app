@@ -1,47 +1,108 @@
-import { Tabs } from "expo-router";
+import { Tabs, usePathname, useRouter } from "expo-router";
 import React from "react";
-import { Platform } from "react-native";
+import {
+  Dimensions,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 
 import { HapticTab } from "@/components/HapticTab";
-import { IconSymbol } from "@/components/ui/IconSymbol";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function TabLayout() {
+  const router = useRouter();
+  const pathname = usePathname();
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors.default.tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: "absolute",
-          },
-          default: {},
-        }),
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
-          ),
+    <>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: Colors.default.tint,
+          headerShown: false,
+          tabBarButton: HapticTab,
+          tabBarBackground: TabBarBackground,
+          tabBarStyle: Platform.select({
+            ios: {
+              // Use a transparent background on iOS to show the blur effect
+              position: "absolute",
+            },
+            default: {
+              position: "absolute",
+              backgroundColor: "transparent",
+              borderTopWidth: 0,
+              elevation: 0,
+              height: 90,
+            },
+          }),
         }}
-      />
-      <Tabs.Screen
-        name="history"
-        options={{
-          title: "Histórico",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Home",
+            tabBarIcon: ({ color }) => (
+              <Ionicons name="home" size={24} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="camera"
+          options={{
+            title: "Camera",
+            tabBarButton: () => {
+              const isActive = pathname === "/camera";
+              return (
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push("/camera");
+                  }}
+                  style={[
+                    styles.absoluteButton,
+                    isActive && {
+                      backgroundColor: "#f33",
+                      borderWidth: 2,
+                      borderColor: "#fff",
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="scan-circle-outline"
+                    size={60}
+                    color={isActive ? "#fff" : "#f33"}
+                  />
+                </TouchableOpacity>
+              );
+            },
+          }}
+        />
+        <Tabs.Screen
+          name="history"
+          options={{
+            title: "Histórico",
+            tabBarIcon: ({ color }) => (
+              <Ionicons name="time" size={24} color={color} />
+            ),
+          }}
+        />
+      </Tabs>
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  absoluteButton: {
+    position: "absolute",
+    bottom: Dimensions.get("window").height * 0.045,
+    left: "50%",
+    transform: [{ translateX: -38 }],
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: "#0B1525",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
+});
