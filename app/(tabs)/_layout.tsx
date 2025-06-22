@@ -4,6 +4,7 @@ import {
   Dimensions,
   Platform,
   StyleSheet,
+  Text,
   TouchableOpacity,
 } from "react-native";
 
@@ -41,16 +42,51 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: "Home",
-            tabBarIcon: ({ color }) => (
-              <Ionicons name="home" size={24} color={color} />
-            ),
+            title: "Início",
+            tabBarButton: () => {
+              const isActive =
+                pathname === "/home" ||
+                pathname === "/" ||
+                pathname === "/(tabs)";
+              return (
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push("/(tabs)");
+                  }}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 10,
+                  }}
+                >
+                  <Ionicons
+                    name="home"
+                    size={30}
+                    color={isActive ? "white" : "gray"}
+                  />
+                  <Text
+                    style={{
+                      color: isActive ? "white" : "gray",
+                      fontSize: 12,
+                      textAlign: "center",
+                      width: 60,
+                    }}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    Início
+                  </Text>
+                </TouchableOpacity>
+              );
+            },
           }}
         />
         <Tabs.Screen
           name="camera"
           options={{
-            title: "Camera",
+            title: "Câmera",
             tabBarButton: () => {
               const isActive = pathname === "/camera";
               return (
@@ -81,9 +117,41 @@ export default function TabLayout() {
           name="history"
           options={{
             title: "Histórico",
-            tabBarIcon: ({ color }) => (
-              <Ionicons name="time" size={24} color={color} />
-            ),
+            tabBarButton: () => {
+              const isActive = pathname === "/history";
+              return (
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push("/history");
+                  }}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 10,
+                  }}
+                >
+                  <Ionicons
+                    name="time"
+                    size={30}
+                    color={isActive ? "white" : "gray"}
+                  />
+                  <Text
+                    style={{
+                      color: isActive ? "white" : "gray",
+                      fontSize: 12,
+                      textAlign: "center",
+                      width: 60,
+                    }}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    Histórico
+                  </Text>
+                </TouchableOpacity>
+              );
+            },
           }}
         />
       </Tabs>

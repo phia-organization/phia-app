@@ -8,11 +8,56 @@ import {
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { Colors } from "@/constants/Colors";
+import { Colors, pHValueColors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 
-export default function TabTwoScreen() {
+export default function History() {
+  const router = useRouter();
+
+  const items = [
+    {
+      id: "1",
+      image: "@/assets/images/ph-strip.png",
+      createdAt: "2024-06-01T00:00:00.000Z",
+      value: 4.5,
+      level: "Ácido Moderado",
+      description: "Descrição do item 1",
+      location: "Local 1",
+      user: "Usuário da Silva",
+    },
+    {
+      id: "2",
+      image: "@/assets/images/ph-strip.png",
+      createdAt: "2024-06-02T00:00:00.000Z",
+      value: 8.5,
+      level: "Base Forte",
+      description: "Descrição do item 2",
+      location: "Local 2",
+      user: "Usuário da Silva",
+    },
+    {
+      id: "3",
+      image: "@/assets/images/ph-strip.png",
+      createdAt: "2024-06-03T00:00:00.000Z",
+      value: 1.1,
+      level: "Ácido Forte",
+      description: "Descrição do item 3",
+      location: "Local 3",
+      user: "Usuário da Silva",
+    },
+  ];
+
+  function goToDetails(item: any) {
+    router.push({
+      pathname: "/historyDetails",
+      params: {
+        item: JSON.stringify(item),
+      },
+    });
+  }
+
   return (
     <View style={styles.container}>
       <ThemedView style={styles.titleContainer}>
@@ -23,28 +68,10 @@ export default function TabTwoScreen() {
         Esta é a aba de histórico, onde você pode ver suas interações passadas.
       </ThemedText>
 
-      {[
-        {
-          image: "@/assets/images/ph-strip.png",
-          createdAt: "2024-06-01T00:00:00.000Z",
-          value: 4.5,
-          level: "Ácido Moderado",
-        },
-        {
-          image: "@/assets/images/ph-strip.png",
-          createdAt: "2024-06-02T00:00:00.000Z",
-          value: 8.5,
-          level: "Base Moderada",
-        },
-        {
-          image: "@/assets/images/ph-strip.png",
-          createdAt: "2024-06-03T00:00:00.000Z",
-          value: 1.1,
-          level: "Ácido Forte",
-        },
-      ].map((item, idx) => (
-        <View
+      {items.map((item, idx) => (
+        <TouchableOpacity
           key={idx}
+          onPress={() => goToDetails(item)}
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -91,7 +118,18 @@ export default function TabTwoScreen() {
                 fontSize: 13,
               }}
             >
-              Força: {item.level}
+              Força:{" "}
+              <ThemedText
+                type="defaultSemiBold"
+                style={{
+                  fontSize: 13,
+                  color:
+                    pHValueColors[item.level as keyof typeof pHValueColors] ||
+                    Colors.default.text,
+                }}
+              >
+                {item.level}
+              </ThemedText>
             </ThemedText>
           </View>
           <View
@@ -117,7 +155,7 @@ export default function TabTwoScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
       ))}
     </View>
   );
