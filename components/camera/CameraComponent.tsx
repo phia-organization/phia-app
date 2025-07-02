@@ -1,10 +1,13 @@
-import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
-import { useState } from "react";
-import { Button, StyleSheet, Text, View } from "react-native";
+import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
+import { useRef, useState } from 'react';
+import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import PhotoPreviewSection from './CameraPreviewPhoto';
 
 export default function CameraComponent() {
-  const [facing, setFacing] = useState<CameraType>("back");
+  const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
+  const [photo, setPhoto] = useState<any>(null);
+  const cameraRef = useRef<CameraView | null>(null);
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -16,7 +19,7 @@ export default function CameraComponent() {
     return (
       <View style={styles.container}>
         <Text style={styles.message}>
-          We need your permission to show the camera
+          Precisamos da sua permissão para acessar a câmera.
         </Text>
         <Button onPress={requestPermission} title="grant permission" />
       </View>
@@ -24,12 +27,47 @@ export default function CameraComponent() {
   }
 
   function toggleCameraFacing() {
-    setFacing((current) => (current === "back" ? "front" : "back"));
+    setFacing((current) => (current === 'back' ? 'front' : 'back'));
   }
+
+  const handleTakePhoto = async () => {
+    if (cameraRef.current) {
+      const options = {
+        quality: 1,
+        base64: true,
+        exif: false,
+      };
+
+      const takedPhoto = await cameraRef.current.takePictureAsync(options);
+
+      setPhoto(takedPhoto);
+    }
+  };
+
+  const handleRetakePhoto = () => {
+    setPhoto(null);
+  };
+
+  if (photo)
+    return (
+      <PhotoPreviewSection
+        photo={photo}
+        handleRetakePhoto={handleRetakePhoto}
+      />
+    );
 
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing={facing}></CameraView>
+      <CameraView style={styles.camera} facing={facing} ref={cameraRef}>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
+            <Text style={styles.text}>Flip Camera</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleTakePhoto}>
+            <Text style={styles.text}>Take Photo</Text>
+          </TouchableOpacity>
+        </View>
+      </CameraView>
     </View>
   );
 }
@@ -37,16 +75,36 @@ export default function CameraComponent() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: "100%",
-    height: "100%",
+    width: '100%',
+    height: '100%',
     zIndex: 2,
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   message: {
-    textAlign: "center",
+    textAlign: 'center',
     paddingBottom: 10,
+    color: '#fff',
   },
   camera: {
     flex: 1,
+  },
+  button: {
+    flex: 1,
+    alignSelf: 'flex-end',
+    alignItems: 'center',
+    backgroundColor: 'red',
+    zIndex: 20,
+  },
+  text: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  buttonContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: 'transparent',
+    marginBottom: 190,
+    zIndex: 10,
   },
 });
