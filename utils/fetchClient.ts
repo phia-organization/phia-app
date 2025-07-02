@@ -1,6 +1,7 @@
 /* import { API_BASE_URL } from "@env"; */
 
-const API_BASE_URL = "https://128f-189-113-33-26.ngrok-free.app"; // Replace with your actual API base URL
+const API_BASE_URL =
+  "https://c7f2-2804-214-90e8-2f7a-e68a-6919-7d92-410f.ngrok-free.app"; // Replace with your actual API base URL
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 /* import {
