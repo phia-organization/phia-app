@@ -1,14 +1,14 @@
-import { Colors } from "@/constants/Colors";
-import { DarkTheme, ThemeProvider } from "@react-navigation/native";
-import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { Provider as PaperProvider } from "react-native-paper";
-import "react-native-reanimated";
+import { Colors } from '@/constants/Colors';
+import { DarkTheme, ThemeProvider } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { Provider as PaperProvider } from 'react-native-paper';
+import 'react-native-reanimated';
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
   if (!loaded) {
@@ -24,17 +24,18 @@ export default function RootLayout() {
           <Stack.Screen
             name="historyDetails"
             options={{
-              title: "Detalhes da Análise",
+              title: 'Detalhes da Análise',
               headerStyle: {
-                backgroundColor: "#0B1525",
+                backgroundColor: '#0B1525',
               },
               headerTintColor: Colors.default.tint,
               headerTitleStyle: {
-                fontWeight: "bold",
+                fontWeight: 'bold',
               },
             }}
           />
           <Stack.Screen name="+not-found" />
+          <Stack.Screen name="predictedPh" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="auto" />
       </PaperProvider>
