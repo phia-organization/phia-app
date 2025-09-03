@@ -11,8 +11,8 @@ import {
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { Colors, pHValueColors } from "@/constants/Colors";
-
+import { Colors } from "@/constants/Colors";
+/* 
 type PHLevel =
   | "Ácido Forte"
   | "Ácido Moderado"
@@ -20,13 +20,12 @@ type PHLevel =
   | "Base Leve"
   | "Base Moderada"
   | "Base Forte";
-
+ */
 type HistoryItem = {
-  id: string;
-  image: any;
-  createdAt: string;
-  value: number;
-  level: PHLevel;
+  date: string;
+  ph: number;
+  phLevel: string;
+  phColor: string;
   description: string;
   location: string;
   user: string;
@@ -59,26 +58,20 @@ export default function HistoryDetails() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <ThemedView style={styles.titleContainer}>
-        <Text
-          style={{ ...styles.title, color: pHValueColors[parsedItem.level] }}
-        >
-          {parsedItem.level}
+        <Text style={{ ...styles.title, color: parsedItem.phColor }}>
+          {parsedItem.phLevel}
         </Text>
       </ThemedView>
       <Image
-        source={
-          typeof parsedItem.image === "string"
-            ? require("@/assets/images/ph-strip.png")
-            : parsedItem.image
-        }
+        source={require("@/assets/images/ph-strip.png")}
         style={styles.image}
         resizeMode="contain"
       />
 
       <View style={styles.highlightBox}>
-        <Text style={styles.valueText}>Valor do pH: {parsedItem.value}</Text>
+        <Text style={styles.valueText}>Valor do pH: {parsedItem.ph}</Text>
         <Text style={styles.dateText}>
-          {new Date(parsedItem.createdAt).toLocaleDateString("pt-BR")}
+          {new Date(parsedItem.date).toLocaleDateString("pt-BR")}
         </Text>
       </View>
 

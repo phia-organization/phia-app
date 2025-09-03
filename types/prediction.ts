@@ -1,5 +1,4 @@
 export interface Prediction {
-  url?: string;
   predicted_ph: number;
   rgbs: {
     q1: {

@@ -8,15 +8,28 @@ import {
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { Colors, pHValueColors } from "@/constants/Colors";
+import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 
 export default function History() {
   const router = useRouter();
 
-  const items = [
+  const [items, setItems] = React.useState<
+    {
+      date: string;
+      description: string;
+      location: string;
+      ph: number;
+      phColor: string;
+      phLevel: string;
+      user: string;
+    }[]
+  >([]);
+
+  /* const items = [
     {
       id: "1",
       image: "@/assets/images/ph-strip.png",
@@ -47,7 +60,7 @@ export default function History() {
       location: "Local 3",
       user: "Usuário da Silva",
     },
-  ];
+  ]; */
 
   function goToDetails(item: any) {
     router.push({
@@ -58,6 +71,18 @@ export default function History() {
     });
   }
 
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await AsyncStorage.getItem("phRecords");
+      if (data) {
+        const parsedData = JSON.parse(data);
+        setItems(parsedData);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <View style={styles.container}>
       <ThemedView style={styles.titleContainer}>
@@ -67,6 +92,12 @@ export default function History() {
       <ThemedText type="defaultSemiBold" style={{ textAlign: "center" }}>
         Esta é a aba de histórico, onde você pode ver suas interações passadas.
       </ThemedText>
+
+      {items.length === 0 && (
+        <ThemedText type="defaultSemiBold" style={{ textAlign: "center" }}>
+          Nenhum registro encontrado.
+        </ThemedText>
+      )}
 
       {items.map((item, idx) => (
         <TouchableOpacity
@@ -107,10 +138,10 @@ export default function History() {
               }}
             >
               Data do Registro:{" "}
-              {new Date(item.createdAt).toLocaleDateString("pt-BR")}
+              {new Date(item.date).toLocaleDateString("pt-BR")}
             </ThemedText>
             <ThemedText type="defaultSemiBold" style={{ fontSize: 20 }}>
-              Valor do pH: {item.value}
+              Valor do pH: {item.ph}
             </ThemedText>
             <ThemedText
               type="default"
@@ -123,12 +154,10 @@ export default function History() {
                 type="defaultSemiBold"
                 style={{
                   fontSize: 13,
-                  color:
-                    pHValueColors[item.level as keyof typeof pHValueColors] ||
-                    Colors.default.text,
+                  color: item.phColor || Colors.default.text,
                 }}
               >
-                {item.level}
+                {item.phLevel}
               </ThemedText>
             </ThemedText>
           </View>
@@ -146,9 +175,20 @@ export default function History() {
               }}
             >
               <TouchableOpacity
-                onPress={() => {
-                  // Handle delete action
-                  console.log(`Delete item with value: ${item.value}`);
+                onPress={async () => {
+                  // Remove item by date from AsyncStorage
+                  const data = await AsyncStorage.getItem("phRecords");
+                  if (data) {
+                    const parsedData = JSON.parse(data);
+                    const filteredData = parsedData.filter(
+                      (record: any) => record.date !== item.date
+                    );
+                    await AsyncStorage.setItem(
+                      "phRecords",
+                      JSON.stringify(filteredData)
+                    );
+                    setItems(filteredData);
+                  }
                 }}
               >
                 <Ionicons name="trash-outline" size={24} color="white" />
