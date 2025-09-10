@@ -12,6 +12,7 @@ import { Portal } from "react-native-paper";
 
 export default function TabTwoScreen() {
   const [alertVisible, setAlertVisible] = useState(true);
+  const [permissionAccepted, setPermissionAccepted] = useState(false);
 
   useEffect(() => {
     const checkDontShowAgain = async () => {
@@ -48,8 +49,14 @@ export default function TabTwoScreen() {
 
       {!alertVisible && (
         <>
-          <CameraComponent />
-          <CameraFrameOverlay />
+          <CameraComponent
+            permissionAccepted={permissionAccepted}
+            setPermissionAccepted={setPermissionAccepted}
+          />
+          <CameraFrameOverlay
+            permissionAccepted={permissionAccepted}
+            setPermissionAccepted={setPermissionAccepted}
+          />
         </>
       )}
     </View>

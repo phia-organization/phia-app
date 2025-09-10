@@ -1,26 +1,43 @@
-import { Prediction } from '@/types/prediction';
-import { subscribeToCameraTakePhoto } from '@/utils/camera-events';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useIsFocused } from '@react-navigation/native';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
-import PhotoPreviewSection from './CameraPreviewPhoto';
+import { Prediction } from "@/types/prediction";
+import { subscribeToCameraTakePhoto } from "@/utils/camera-events";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useIsFocused } from "@react-navigation/native";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import { router } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { StyleSheet, View } from "react-native";
+import PhotoPreviewSection from "./CameraPreviewPhoto";
 
-export default function CameraComponent() {
+export default function CameraComponent({
+  permissionAccepted,
+  setPermissionAccepted,
+}: {
+  permissionAccepted: boolean;
+  setPermissionAccepted: (value: boolean) => void;
+}) {
   const isFocused = useIsFocused();
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<any>(null);
   const cameraRef = useRef<CameraView | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checkedPermission, setCheckedPermission] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      if (!permission) return;
+      if (!permission.granted && !checkedPermission) {
+        await requestPermission();
+        setCheckedPermission(true);
+      }
+    })();
+  }, [permission]);
 
   const getData = async () => {
     try {
-      const jsonValue = await AsyncStorage.getItem('ph_predictions');
+      const jsonValue = await AsyncStorage.getItem("ph_predictions");
       if (jsonValue !== null) {
         const parsedPredictions = JSON.parse(jsonValue);
-        console.log('Stored data:', parsedPredictions);
+        console.log("Stored data:", parsedPredictions);
       }
     } catch (e) {
       // error reading value
@@ -29,7 +46,7 @@ export default function CameraComponent() {
 
   const clearData = async () => {
     try {
-      await AsyncStorage.removeItem('ph_predictions');
+      await AsyncStorage.removeItem("ph_predictions");
     } catch (e) {
       // saving error
     }
@@ -38,7 +55,7 @@ export default function CameraComponent() {
   const storeNewPrediction = async (newPrediction: Prediction) => {
     try {
       const existingJsonPredictions = await AsyncStorage.getItem(
-        'ph_predictions'
+        "ph_predictions"
       );
 
       let existingPredictions: Prediction[] = [];
@@ -49,11 +66,11 @@ export default function CameraComponent() {
       existingPredictions.push(newPrediction);
 
       await AsyncStorage.setItem(
-        'ph_predictions',
+        "ph_predictions",
         JSON.stringify(existingPredictions)
       );
     } catch (e) {
-      console.error('Failed to store new prediction:', e);
+      console.error("Failed to store new prediction:", e);
     }
   };
 
@@ -75,7 +92,6 @@ export default function CameraComponent() {
     const unsubscribe = subscribeToCameraTakePhoto(() => {
       if (!photo) handleTakePhoto();
     });
-
     return () => {
       unsubscribe();
     };
@@ -88,25 +104,13 @@ export default function CameraComponent() {
 
   if (!isFocused) return null;
 
-  if (!permission.granted) {
-    // Camera permissions are not granted yet.
-    return (
-      <View style={styles.container}>
-        <Text style={styles.message}>
-          Precisamos da sua permissão para acessar a câmera.
-        </Text>
-        <Button onPress={requestPermission} title="grant permission" />
-      </View>
-    );
-  }
-
   const handleRetakePhoto = () => {
     setPhoto(null);
   };
 
   const handleSavePhoto = async () => {
     if (!photo) return;
-    console.log('Iniciando upload da foto...');
+    console.log("Iniciando upload da foto...");
     setLoading(true);
     // try {
     //   const { uri } = photo;
@@ -129,7 +133,6 @@ export default function CameraComponent() {
     //   storeData(response);
 
     //   console.log('✔️ Upload realizado:', response.url);
-    router.push('/predictedPh');
     //   // … faça o que precisar com a URL retornada
     // } catch (err) {
     //   console.error('Falha no upload da foto:', err);
@@ -147,6 +150,7 @@ export default function CameraComponent() {
     } as Prediction);
 
     setLoading(false);
+    router.push("/predictedPh");
   };
 
   if (photo)
@@ -168,35 +172,35 @@ export default function CameraComponent() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     zIndex: 2,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   message: {
-    textAlign: 'center',
+    textAlign: "center",
     paddingBottom: 10,
-    color: '#fff',
+    color: "#fff",
   },
   camera: {
     flex: 1,
   },
   button: {
     flex: 1,
-    alignSelf: 'flex-end',
-    alignItems: 'center',
-    backgroundColor: 'red',
+    alignSelf: "flex-end",
+    alignItems: "center",
+    backgroundColor: "red",
     zIndex: 20,
   },
   text: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
   },
   buttonContainer: {
     flex: 1,
-    flexDirection: 'row',
-    backgroundColor: 'transparent',
+    flexDirection: "row",
+    backgroundColor: "transparent",
     marginBottom: 190,
     zIndex: 10,
   },
