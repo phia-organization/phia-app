@@ -101,7 +101,6 @@ export default function CameraComponent({
   }, [photo]);
 
   if (!permission) {
-    // Camera permissions are still loading.
     return <View />;
   }
 
@@ -143,7 +142,7 @@ export default function CameraComponent({
     // }
 
     storeNewPrediction({
-      predicted_ph: Math.floor(Math.random() * 14), // exemplo de valor
+      predicted_ph: Math.floor(Math.random() * 14),
       rgbs: {
         q1: { r: 255, g: 0, b: 0 },
         q2: { r: 0, g: 255, b: 0 },

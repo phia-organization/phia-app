@@ -8,7 +8,6 @@ import {
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-// CERTIFIQUE-SE DE QUE ESTE ARQUIVO CONTÉM A NOVA PALETA
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";

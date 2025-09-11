@@ -1,5 +1,5 @@
 import { ThemedText } from "@/components/ThemedText";
-import { Colors, pHValueColors } from "@/constants/Colors"; // NOVO: Usando nossa paleta de cores
+import { Colors, pHValueColors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -11,7 +11,6 @@ export default function CameraInstructionsOverlay({
   onConfirm: () => void;
   onDontShowAgain: () => void;
 }) {
-  // NOVO: Componente para desenhar os cantos, igual ao CameraFrameOverlay
   const Corner = ({
     position,
   }: {
