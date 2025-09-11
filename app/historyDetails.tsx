@@ -1,31 +1,24 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo } from "react";
 import {
-  Dimensions,
   Image,
   ScrollView,
   StyleSheet,
-  Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 
+import { Ionicons } from "@expo/vector-icons";
+
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
-/* 
-type PHLevel =
-  | "Ácido Forte"
-  | "Ácido Moderado"
-  | "Ácido Leve"
-  | "Base Leve"
-  | "Base Moderada"
-  | "Base Forte";
- */
+
 type HistoryItem = {
   date: string;
   ph: number;
   phLevel: string;
   phColor: string;
+  title: string;
   description: string;
   location: string;
   user: string;
@@ -33,6 +26,7 @@ type HistoryItem = {
 
 export default function HistoryDetails() {
   const { item } = useLocalSearchParams();
+  const router = useRouter();
 
   const parsedItem: HistoryItem | null = useMemo(() => {
     try {
@@ -55,149 +49,223 @@ export default function HistoryDetails() {
     );
   }
 
+  const InfoRow = ({
+    icon,
+    label,
+    value,
+  }: {
+    icon: any;
+    label: string;
+    value: string;
+  }) => (
+    <View style={styles.infoRow}>
+      <View style={styles.iconContainer}>
+        <Ionicons name={icon} size={20} color={Colors.default.accent} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <ThemedText style={styles.infoLabel}>{label}</ThemedText>
+        <ThemedText style={styles.infoValue}>{value}</ThemedText>
+      </View>
+    </View>
+  );
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <ThemedView style={styles.titleContainer}>
-        <Text style={{ ...styles.title, color: parsedItem.phColor }}>
-          {parsedItem.phLevel}
-        </Text>
-      </ThemedView>
-      <Image
-        source={require("@/assets/images/ph-strip.png")}
-        style={styles.image}
-        resizeMode="contain"
-      />
-
-      <View style={styles.highlightBox}>
-        <Text style={styles.valueText}>Valor do pH: {parsedItem.ph}</Text>
-        <Text style={styles.dateText}>
-          {new Date(parsedItem.date).toLocaleDateString("pt-BR")}
-        </Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color={Colors.default.text} />
+        </TouchableOpacity>
+        <ThemedText
+          type="subtitle"
+          style={styles.headerTitle}
+          numberOfLines={1}
+        >
+          {"Detalhes da Medição"}
+        </ThemedText>
       </View>
 
-      <View style={styles.infoBox}>
-        <Text
-          style={{
-            color: Colors.default.tint,
-            fontWeight: "bold",
-          }}
-        >
-          Local:{" "}
-        </Text>
-        <Text
-          style={{
-            color: Colors.default.tint,
-            fontWeight: "light",
-          }}
-        >
-          {parsedItem.location}
-        </Text>
-      </View>
+      <ScrollView contentContainerStyle={styles.contentContainer}>
+        <View style={styles.resultsCard}>
+          <View
+            style={{
+              width: "100%",
+            }}
+          >
+            <ThemedText
+              style={{
+                ...styles.headerTitle,
+                textAlign: "center",
+                marginBottom: 8,
+              }}
+            >
+              {parsedItem.title || "Medição sem título"}
+            </ThemedText>
+            <ThemedText style={{ ...styles.resultsLabel, textAlign: "center" }}>
+              Valor do pH
+            </ThemedText>
+            <ThemedText style={{ ...styles.resultsValue, textAlign: "center" }}>
+              {parsedItem.ph}
+            </ThemedText>
+          </View>
+          <View
+            style={[styles.levelBadge, { backgroundColor: parsedItem.phColor }]}
+          >
+            <ThemedText style={styles.levelBadgeText}>
+              {parsedItem.phLevel}
+            </ThemedText>
+          </View>
+        </View>
 
-      <View style={styles.infoBox}>
-        <Text
-          style={{
-            fontWeight: "bold",
-            color: Colors.default.tint,
-          }}
-        >
-          Usuário:{" "}
-        </Text>
-        <Text
-          style={{
-            color: Colors.default.tint,
-            fontWeight: "light",
-          }}
-        >
-          {parsedItem.user}
-        </Text>
-      </View>
+        <View style={styles.detailsCard}>
+          <InfoRow
+            icon="calendar-outline"
+            label="Data da Medição"
+            value={new Date(parsedItem.date).toLocaleDateString("pt-BR", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          />
+          <View style={styles.divider} />
+          <InfoRow
+            icon="location-outline"
+            label="Local"
+            value={parsedItem.location}
+          />
+          <View style={styles.divider} />
+          <InfoRow
+            icon="person-outline"
+            label="Usuário"
+            value={parsedItem.user}
+          />
+          <View style={styles.divider} />
+          <InfoRow
+            icon="document-text-outline"
+            label="Descrição"
+            value={parsedItem.description}
+          />
+        </View>
 
-      <View style={styles.infoBox}>
-        <Text
-          style={{
-            fontWeight: "bold",
-            color: Colors.default.tint,
-          }}
-        >
-          Descrição:
-        </Text>
-        <Text
-          style={{
-            color: Colors.default.tint,
-            fontWeight: "light",
-          }}
-        >
-          {parsedItem.description}
-        </Text>
-      </View>
-    </ScrollView>
+        <View style={styles.imageCard}>
+          <ThemedText style={styles.imageCardTitle}>
+            Fita de pH Registrada
+          </ThemedText>
+          <Image
+            source={require("@/assets/images/ph-strip.png")}
+            style={styles.image}
+            resizeMode="contain"
+          />
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    flex: 1,
     backgroundColor: Colors.default.background,
-    alignItems: "center",
-    gap: 24,
-    height: "100%",
-    width: "100%",
   },
-  titleContainer: {
+  header: {
     flexDirection: "row",
-    paddingVertical: 5,
-    paddingHorizontal: 16,
-    borderRadius: 100,
-    backgroundColor: Colors.default.primary,
-    gap: 8,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 700,
-  },
-  image: {
-    width: "100%",
-    height: Dimensions.get("window").height * 0.3,
-    borderRadius: 20,
-    marginBottom: 10,
-  },
-  highlightBox: {
-    backgroundColor: Colors.default.card,
-    borderRadius: 16,
-    padding: 16,
-    width: "100%",
     alignItems: "center",
-    gap: 6,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    paddingTop: 60,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    backgroundColor: Colors.default.primary,
   },
-  levelText: {
-    fontSize: 18,
-    color: Colors.default.tint,
+  backButton: {
+    padding: 4,
+    marginRight: 12,
   },
-  valueText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
+  headerTitle: {
+    fontSize: 20,
+    flex: 1,
   },
-  dateText: {
+  contentContainer: {
+    padding: 16,
+    gap: 16,
+  },
+  resultsCard: {
+    backgroundColor: Colors.default.card,
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  resultsLabel: {
+    color: Colors.default.textSecondary,
     fontSize: 14,
-    color: "rgba(255,255,255,0.6)",
+    marginBottom: 4,
   },
-  infoBox: {
+  resultsValue: {
+    fontFamily: "SpaceMono",
+    fontSize: 56,
+    color: Colors.default.accent,
+    fontWeight: "bold",
+  },
+  levelBadge: {
+    marginTop: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 100,
+  },
+  levelBadgeText: {
+    color: Colors.default.primary,
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  detailsCard: {
     backgroundColor: Colors.default.card,
     borderRadius: 12,
     padding: 16,
-    width: "100%",
-    gap: 4,
-    display: "flex",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  infoRow: {
     flexDirection: "row",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+    alignItems: "flex-start",
+    paddingVertical: 8,
+  },
+  iconContainer: {
+    marginRight: 16,
+    marginTop: 2,
+  },
+  infoLabel: {
+    fontSize: 12,
+    color: Colors.default.textSecondary,
+    marginBottom: 2,
+  },
+  infoValue: {
+    fontSize: 16,
+    color: Colors.default.text,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    marginVertical: 8,
+  },
+  imageCard: {
+    backgroundColor: Colors.default.card,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  imageCardTitle: {
+    color: Colors.default.textSecondary,
+    fontSize: 12,
+    marginBottom: 12,
+  },
+  image: {
+    width: "100%",
+    height: 150,
+    borderRadius: 8,
   },
 });

@@ -1,8 +1,13 @@
+import { ThemedText } from "@/components/ThemedText";
+import { Colors } from "@/constants/Colors";
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -17,20 +22,26 @@ const SavePh: React.FC = () => {
     phLevel: string;
   }>();
 
+  const [title, setTitle] = useState("");
   const [user, setUser] = useState("");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
-    if (!user || !location || !description) {
-      Alert.alert("Erro", "Preencha todos os campos.");
+    if (!title || !user || !location || !description) {
+      Alert.alert("Atenção", "Por favor, preencha todos os campos.");
       return;
     }
     if (!ph) {
-      Alert.alert("Erro", "Valor de pH não informado.");
+      Alert.alert("Erro", "Valor de pH não foi encontrado.");
       return;
     }
+
+    setIsLoading(true);
+
     const data = {
+      title,
       user,
       location,
       description,
@@ -39,55 +50,131 @@ const SavePh: React.FC = () => {
       phColor,
       phLevel,
     };
+
     try {
       const existing = await AsyncStorage.getItem("phRecords");
       const records = existing ? JSON.parse(existing) : [];
       records.push(data);
       await AsyncStorage.setItem("phRecords", JSON.stringify(records));
-      Alert.alert("Sucesso", "Coleta de pH salva com sucesso!");
-      setUser("");
-      setLocation("");
-      setDescription("");
-      router.push("/history");
+
+      setTimeout(() => {
+        Alert.alert("Sucesso", "Medição salva com sucesso!");
+        router.push("/history");
+        setIsLoading(false);
+      }, 500);
     } catch (error) {
       Alert.alert("Erro", "Não foi possível salvar os dados.");
+      setIsLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.picture}></View>
-      <Text style={styles.label}>Usuário:</Text>
-      <TextInput
-        placeholderTextColor={"#ccc"}
-        style={styles.input}
-        value={user}
-        onChangeText={setUser}
-        placeholder="Seu nome"
-      />
-      <Text style={styles.label}>Local:</Text>
-      <TextInput
-        placeholderTextColor={"#c4c4c4ff"}
-        style={styles.input}
-        value={location}
-        onChangeText={setLocation}
-        placeholder="Ex: Lago Azul"
-      />
-      <Text style={styles.label}>Descrição:</Text>
-      <TextInput
-        placeholderTextColor={"#ccc"}
-        style={styles.input}
-        value={description}
-        onChangeText={setDescription}
-        placeholder="Observações adicionais"
-      />
-      <Text style={styles.label}>Valor do pH:</Text>
-      <Text style={[styles.input, { borderColor: phColor, color: phColor }]}>
-        {ph}
-      </Text>
-      <TouchableOpacity style={styles.buttonSave} onPress={handleSave}>
-        <Text style={styles.text}>Salvar Coleta</Text>
-      </TouchableOpacity>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color={Colors.default.text} />
+        </TouchableOpacity>
+        <ThemedText type="subtitle" style={styles.headerTitle}>
+          Salvar Medição
+        </ThemedText>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.imagePlaceholder}>
+          <Ionicons
+            name="image-outline"
+            size={48}
+            color={Colors.default.textSecondary}
+          />
+          <View style={{ width: "100%" }}>
+            <ThemedText
+              style={{
+                color: Colors.default.textSecondary,
+                textAlign: "center",
+              }}
+            >
+              Prévia da Fita de pH
+            </ThemedText>
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <ThemedText style={styles.label}>Título da Medição</ThemedText>
+          <TextInput
+            style={styles.input}
+            value={title}
+            onChangeText={setTitle}
+            placeholder={"Ex: pH da Piscina"}
+            placeholderTextColor={Colors.default.textSecondary}
+          />
+        </View>
+        <View style={styles.inputGroup}>
+          <ThemedText style={styles.label}>Nome do Usuário</ThemedText>
+          <TextInput
+            style={styles.input}
+            value={user}
+            onChangeText={setUser}
+            placeholder="Seu nome"
+            placeholderTextColor={Colors.default.textSecondary}
+          />
+        </View>
+        <View style={styles.inputGroup}>
+          <ThemedText style={styles.label}>Local da Medição</ThemedText>
+          <TextInput
+            style={styles.input}
+            value={location}
+            onChangeText={setLocation}
+            placeholder="Ex: Laboratório"
+            placeholderTextColor={Colors.default.textSecondary}
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <ThemedText style={styles.label}>Descrição</ThemedText>
+          <TextInput
+            style={[styles.input, { height: 80 }]}
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Detalhes adicionais..."
+            placeholderTextColor={Colors.default.textSecondary}
+            multiline
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <ThemedText style={styles.label}>Valor do pH (Detectado)</ThemedText>
+          <Text
+            style={[
+              styles.phValueDisplay,
+              { color: phColor, borderColor: phColor },
+            ]}
+          >
+            {ph}
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={handleSave}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="small" color={Colors.default.primary} />
+          ) : (
+            <>
+              <Ionicons
+                name="save-outline"
+                size={22}
+                color={Colors.default.primary}
+              />
+              <Text style={styles.saveButtonText}>Salvar Medição</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 };
@@ -95,51 +182,85 @@ const SavePh: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: "column",
+    backgroundColor: Colors.default.background,
+  },
+  header: {
+    flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    backgroundColor: "#3d587560",
-    padding: 30,
+    paddingTop: 60,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    backgroundColor: Colors.default.primary,
   },
-  picture: {
-    width: "65%",
-    marginTop: "15%",
-    aspectRatio: 1,
-    borderRadius: 8,
-    backgroundColor: "#ccc",
-    marginBottom: 16,
+  backButton: {
+    padding: 4,
+    marginRight: 12,
   },
-  label: {
-    fontSize: 18,
-    marginTop: 16,
-    color: "#fff",
-    alignSelf: "flex-start",
-    marginLeft: 8,
+  headerTitle: {
+    fontSize: 20,
   },
-  input: {
-    borderWidth: 2,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 4,
-    width: "90%",
-    fontSize: 16,
-    color: "#fff",
+  scrollContainer: {
+    padding: 20,
+    gap: 16,
   },
-
-  buttonSave: {
-    backgroundColor: "#3d587560",
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 20,
-    width: "50%",
+  imagePlaceholder: {
+    height: 150,
+    width: "100%",
+    backgroundColor: Colors.default.card,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    marginBottom: 16,
   },
-  text: {
-    fontSize: 18,
-    textAlign: "center",
-    color: "#fff",
+  inputGroup: {
+    width: "100%",
+  },
+  label: {
+    fontSize: 14,
+    color: Colors.default.textSecondary,
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  input: {
+    backgroundColor: Colors.default.card,
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 16,
+    color: Colors.default.text,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  phValueDisplay: {
+    backgroundColor: Colors.default.card,
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 16,
+    fontWeight: "bold",
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  saveButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.default.accent,
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginTop: 24,
+    gap: 10,
+    // Sombra
+    shadowColor: Colors.default.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  saveButtonText: {
+    color: Colors.default.primary,
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

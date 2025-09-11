@@ -1,6 +1,6 @@
 import {
   Dimensions,
-  Image,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -8,6 +8,7 @@ import {
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+// CERTIFIQUE-SE DE QUE ESTE ARQUIVO CONTÉM A NOVA PALETA
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -20,6 +21,7 @@ export default function History() {
   const [items, setItems] = React.useState<
     {
       date: string;
+      title: string;
       description: string;
       location: string;
       ph: number;
@@ -28,39 +30,6 @@ export default function History() {
       user: string;
     }[]
   >([]);
-
-  /* const items = [
-    {
-      id: "1",
-      image: "@/assets/images/ph-strip.png",
-      createdAt: "2024-06-01T00:00:00.000Z",
-      value: 4.5,
-      level: "Ácido Moderado",
-      description: "Descrição do item 1",
-      location: "Local 1",
-      user: "Usuário da Silva",
-    },
-    {
-      id: "2",
-      image: "@/assets/images/ph-strip.png",
-      createdAt: "2024-06-02T00:00:00.000Z",
-      value: 8.5,
-      level: "Base Forte",
-      description: "Descrição do item 2",
-      location: "Local 2",
-      user: "Usuário da Silva",
-    },
-    {
-      id: "3",
-      image: "@/assets/images/ph-strip.png",
-      createdAt: "2024-06-03T00:00:00.000Z",
-      value: 1.1,
-      level: "Ácido Forte",
-      description: "Descrição do item 3",
-      location: "Local 3",
-      user: "Usuário da Silva",
-    },
-  ]; */
 
   function goToDetails(item: any) {
     router.push({
@@ -71,11 +40,26 @@ export default function History() {
     });
   }
 
+  async function deleteItem(dateToDelete: string) {
+    const data = await AsyncStorage.getItem("phRecords");
+    if (data) {
+      const parsedData = JSON.parse(data);
+      const filteredData = parsedData.filter(
+        (record: any) => record.date !== dateToDelete
+      );
+      await AsyncStorage.setItem("phRecords", JSON.stringify(filteredData));
+      setItems(filteredData);
+    }
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       const data = await AsyncStorage.getItem("phRecords");
       if (data) {
-        const parsedData = JSON.parse(data);
+        const parsedData = JSON.parse(data).sort(
+          (a: any, b: any) =>
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
         setItems(parsedData);
       }
     };
@@ -84,146 +68,156 @@ export default function History() {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Histórico</ThemedText>
-      </ThemedView>
-
-      <ThemedText type="defaultSemiBold" style={{ textAlign: "center" }}>
-        Esta é a aba de histórico, onde você pode ver suas interações passadas.
-      </ThemedText>
-
-      {items.length === 0 && (
-        <ThemedText type="defaultSemiBold" style={{ textAlign: "center" }}>
-          Nenhum registro encontrado.
+    <ThemedView style={styles.container}>
+      <View style={styles.header}>
+        <ThemedText type="title">Histórico de Medições</ThemedText>
+        <ThemedText style={{ color: Colors.default.textSecondary }}>
+          Seus registros salvos
         </ThemedText>
-      )}
+      </View>
 
-      {items.map((item, idx) => (
-        <TouchableOpacity
-          key={idx}
-          onPress={() => goToDetails(item)}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            backgroundColor: Colors.default.card,
-            borderRadius: 12,
-            padding: 12,
-            marginVertical: 6,
-            width: "100%",
-            shadowColor: "#000",
-            shadowOpacity: 0.05,
-            shadowRadius: 4,
-            elevation: 2,
-          }}
-        >
-          <View style={{ marginRight: 12 }}>
-            <Image
-              source={require("@/assets/images/ph-strip.png")}
-              alt="history"
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 8,
-                objectFit: "cover",
-              }}
+      <ScrollView contentContainerStyle={styles.listContainer}>
+        {items.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons
+              name="archive-outline"
+              size={48}
+              color={Colors.default.textSecondary}
             />
-          </View>
-          <View style={{ flex: 1 }}>
+            <ThemedText type="subtitle">Nenhum registro</ThemedText>
             <ThemedText
-              type="default"
               style={{
-                color: "rgba(255, 255, 255, 0.6)",
-                fontSize: 12,
+                color: Colors.default.textSecondary,
+                textAlign: "center",
               }}
             >
-              Data do Registro:{" "}
-              {new Date(item.date).toLocaleDateString("pt-BR")}
-            </ThemedText>
-            <ThemedText type="defaultSemiBold" style={{ fontSize: 20 }}>
-              Valor do pH: {item.ph}
-            </ThemedText>
-            <ThemedText
-              type="default"
-              style={{
-                fontSize: 13,
-              }}
-            >
-              Força:{" "}
-              <ThemedText
-                type="defaultSemiBold"
-                style={{
-                  fontSize: 13,
-                  color: item.phColor || Colors.default.text,
-                }}
-              >
-                {item.phLevel}
-              </ThemedText>
+              Suas medições de pH aparecerão aqui.
             </ThemedText>
           </View>
-          <View
-            style={{
-              height: "100%",
-              alignItems: "flex-start",
-            }}
-          >
-            <View
-              style={{
-                backgroundColor: Colors.default.error,
-                padding: 3,
-                borderRadius: 10,
-              }}
+        ) : (
+          items.map((item, idx) => (
+            <TouchableOpacity
+              key={idx}
+              onPress={() => goToDetails(item)}
+              style={styles.card}
             >
+              <View
+                style={[
+                  styles.colorIndicator,
+                  {
+                    backgroundColor:
+                      item.phColor || Colors.default.textSecondary,
+                  },
+                ]}
+              />
+
+              <View style={styles.cardContent}>
+                <View style={{ flex: 1 }}>
+                  <ThemedText type="subtitle" numberOfLines={1}>
+                    {item.title || "Medição sem título"}
+                  </ThemedText>
+                  <ThemedText
+                    style={{
+                      color: Colors.default.textSecondary,
+                      fontSize: 12,
+                    }}
+                  >
+                    {new Date(item.date).toLocaleDateString("pt-BR", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </ThemedText>
+                </View>
+
+                <View style={styles.phValueContainer}>
+                  <ThemedText style={styles.phValueText}>{item.ph}</ThemedText>
+                  <ThemedText
+                    style={[styles.phLevelText, { color: item.phColor }]}
+                  >
+                    {item.phLevel}
+                  </ThemedText>
+                </View>
+              </View>
+
               <TouchableOpacity
-                onPress={async () => {
-                  // Remove item by date from AsyncStorage
-                  const data = await AsyncStorage.getItem("phRecords");
-                  if (data) {
-                    const parsedData = JSON.parse(data);
-                    const filteredData = parsedData.filter(
-                      (record: any) => record.date !== item.date
-                    );
-                    await AsyncStorage.setItem(
-                      "phRecords",
-                      JSON.stringify(filteredData)
-                    );
-                    setItems(filteredData);
-                  }
-                }}
+                onPress={() => deleteItem(item.date)}
+                style={styles.deleteButton}
               >
-                <Ionicons name="trash-outline" size={24} color="white" />
+                <Ionicons
+                  name="trash-outline"
+                  size={20}
+                  color={Colors.default.textSecondary}
+                />
               </TouchableOpacity>
-            </View>
-          </View>
-        </TouchableOpacity>
-      ))}
-    </View>
+            </TouchableOpacity>
+          ))
+        )}
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 16,
     backgroundColor: Colors.default.background,
-    padding: 16,
   },
-  headerImage: {
-    color: "#808080",
-    bottom: -90,
-    left: -35,
-    position: "absolute",
-  },
-  titleContainer: {
-    flexDirection: "row",
-    paddingVertical: 10,
-    marginTop: Dimensions.get("window").height * 0.035,
-    paddingHorizontal: 16,
-    borderRadius: 100,
+  header: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
     backgroundColor: Colors.default.primary,
+  },
+  listContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    gap: 12,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: Dimensions.get("window").height * 0.2,
     gap: 8,
+  },
+  card: {
+    backgroundColor: Colors.default.card,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  colorIndicator: {
+    width: 6,
+    height: "100%",
+  },
+  cardContent: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  phValueContainer: {
+    alignItems: "flex-end",
+  },
+  phValueText: {
+    fontFamily: "SpaceMono",
+    fontSize: 22,
+    color: Colors.default.accent,
+    fontWeight: "bold",
+  },
+  phLevelText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  deleteButton: {
+    padding: 16,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

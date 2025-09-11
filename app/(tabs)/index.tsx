@@ -1,86 +1,154 @@
-import { LinearGradient } from "expo-linear-gradient";
-import { Image, ScrollView, StyleSheet, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 
-type InfoCardProps = {
-  icon: string;
+type HistoryItem = {
+  title: string;
+  ph: number;
+  date: string;
+  phColor: string;
+};
+
+const InfoCard = ({
+  icon,
+  title,
+  children,
+}: {
+  icon: any;
   title: string;
   children: React.ReactNode;
-};
-
-const InfoCard = ({ icon, title, children }: InfoCardProps) => {
-  return (
-    <ThemedView style={styles.card}>
-      <View style={styles.cardIconCircle}>
-        <ThemedText style={styles.cardIcon}>{icon}</ThemedText>
-      </View>
-      <ThemedText type="subtitle" style={styles.cardTitle}>
+}) => (
+  <View style={styles.infoCard}>
+    <View style={styles.infoCardHeader}>
+      <Ionicons name={icon} size={20} color={Colors.default.accent} />
+      <ThemedText type="subtitle" style={styles.infoCardTitle}>
         {title}
       </ThemedText>
-      <ThemedText style={styles.cardText}>{children}</ThemedText>
-    </ThemedView>
-  );
-};
+    </View>
+    <ThemedText style={styles.infoCardText}>{children}</ThemedText>
+  </View>
+);
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const [lastMeasurement, setLastMeasurement] = useState<HistoryItem | null>(
+    null
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchLastMeasurement = async () => {
+        const data = await AsyncStorage.getItem("phRecords");
+        if (data) {
+          const records = JSON.parse(data);
+          if (records.length > 0) {
+            const sortedRecords = records.sort(
+              (a: any, b: any) =>
+                new Date(b.date).getTime() - new Date(a.date).getTime()
+            );
+            setLastMeasurement(sortedRecords[0]);
+          }
+        }
+      };
+      fetchLastMeasurement();
+    }, [])
+  );
+
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.default.primary }}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <Image
           source={require("@/assets/images/favicon.png")}
           style={styles.logo}
-          width={100}
-          height={100}
-          alt="pHIA Logo"
         />
         <ThemedText type="title" style={styles.headerTitle}>
           pHIA
         </ThemedText>
       </View>
-      <LinearGradient
-        colors={["#3a4450", "#5c6a82"]}
-        style={styles.gradientBg}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={{ paddingBottom: 32 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
 
-        {/* Seção de Título/Boas-vindas */}
-        <ThemedView style={styles.headerContainer}>
-          <ThemedText type="defaultSemiBold" style={styles.tagline}>
-            A análise de pH na palma da sua mão.
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <ThemedText style={styles.welcomeText}>
+          A análise de pH na palma da sua mão.
+        </ThemedText>
+
+        <TouchableOpacity
+          style={styles.ctaButton}
+          onPress={() => router.push("/camera")}
+        >
+          <Ionicons
+            name="camera-outline"
+            size={24}
+            color={Colors.default.primary}
+          />
+          <Text style={styles.ctaButtonText}>Nova Medição</Text>
+        </TouchableOpacity>
+
+        <View style={styles.section}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            Último Registro
           </ThemedText>
-        </ThemedView>
+          {lastMeasurement ? (
+            <View style={styles.recentCard}>
+              <View
+                style={[
+                  styles.colorIndicator,
+                  { backgroundColor: lastMeasurement.phColor },
+                ]}
+              />
+              <View style={styles.recentCardContent}>
+                <ThemedText style={styles.recentCardTitle} numberOfLines={1}>
+                  {lastMeasurement.title}
+                </ThemedText>
+                <ThemedText
+                  style={{ color: Colors.default.textSecondary, fontSize: 12 }}
+                >
+                  {new Date(lastMeasurement.date).toLocaleDateString("pt-BR")}
+                </ThemedText>
+              </View>
+              <ThemedText style={styles.recentCardPh}>
+                {parseFloat(lastMeasurement.ph.toString()).toFixed(1)}
+              </ThemedText>
+            </View>
+          ) : (
+            <View style={styles.emptyRecentCard}>
+              <ThemedText style={{ color: Colors.default.textSecondary }}>
+                Nenhuma medição ainda.
+              </ThemedText>
+            </View>
+          )}
+        </View>
 
-        {/* Container principal para os cards */}
-        <View style={styles.contentContainer}>
-          <InfoCard icon="🌱" title="Motivação">
+        <View style={styles.section}>
+          <ThemedText type="subtitle" style={styles.sectionTitle}>
+            Conheça o Projeto
+          </ThemedText>
+          <InfoCard icon="heart-outline" title="Motivação">
             Medir o pH é essencial, mas os métodos atuais são imprecisos para
             leitura visual ou muito caros. O pHIA torna a análise precisa e
             acessível para todos.
           </InfoCard>
-
-          <InfoCard icon="💡" title="A Ideia">
+          <InfoCard icon="bulb-outline" title="A Ideia">
             Utilizamos a câmera do seu celular e Inteligência Artificial para
-            analisar fitas de pH, oferecendo resultados confiáveis, de baixo
-            custo e de forma prática.
+            analisar fitas de pH, oferecendo resultados confiáveis e de baixo
+            custo.
           </InfoCard>
-
-          <InfoCard icon="🎯" title="Objetivo">
-            Desenvolver um app inclusivo (Android e iOS) que interpreta as cores
-            das fitas com precisão, mesmo com variações de luz, auxiliando
-            estudantes, agricultores e profissionais.
+          <InfoCard icon="rocket-outline" title="Objetivo">
+            Desenvolver um app inclusivo que interpreta as cores das fitas com
+            precisão, auxiliando estudantes, agricultores e profissionais.
           </InfoCard>
-
-          <InfoCard icon="🔬" title="Nossa Escala">
+          <InfoCard icon="bar-chart-outline" title="Nossa Escala">
             Para garantir a máxima precisão, criamos e validamos uma escala de
             referência própria, calibrada com um pHmetro profissional, que
             treina nosso sistema.
@@ -92,90 +160,119 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  gradientBg: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: -1,
-  },
-  scrollView: {
+  container: {
+    flex: 1,
     backgroundColor: Colors.default.background,
-    marginTop: 80,
   },
-  headerContainer: {
-    paddingVertical: 20,
-    paddingHorizontal: 16,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 60,
+    paddingBottom: 16,
+    backgroundColor: Colors.default.primary,
+  },
+  logo: {
+    width: 36,
+    height: 36,
+    marginRight: 8,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+  },
+  scrollContainer: {
+    padding: 20,
+    paddingBottom: 120,
+  },
+  welcomeText: {
+    fontSize: 18,
+    textAlign: "center",
+    color: Colors.default.textSecondary,
+    marginBottom: 24,
+  },
+  ctaButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.default.accent,
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 10,
+    shadowColor: Colors.default.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  ctaButtonText: {
+    color: Colors.default.primary,
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  section: {
+    marginTop: 32,
+    gap: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+  },
+  recentCard: {
+    backgroundColor: Colors.default.card,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  colorIndicator: {
+    width: 6,
+    height: "100%",
+  },
+  recentCardContent: {
+    flex: 1,
+    padding: 16,
+  },
+  recentCardTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  recentCardPh: {
+    fontFamily: "SpaceMono",
+    fontSize: 24,
+    color: Colors.default.accent,
+    fontWeight: "bold",
+    padding: 16,
+  },
+  emptyRecentCard: {
+    backgroundColor: Colors.default.card,
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  infoCard: {
+    backgroundColor: Colors.default.card,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    gap: 8,
+  },
+  infoCardHeader: {
+    flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
-  tagline: {
-    textAlign: "center",
+  infoCardTitle: {
     fontSize: 16,
-    color: Colors.default.text,
-    letterSpacing: 0.2,
   },
-  contentContainer: {
-    padding: 20,
-    gap: 20,
-    paddingBottom: 120,
-  },
-  logo: {
-    width: 64,
-    height: 64,
-    resizeMode: "contain",
-    marginBottom: 0,
-  },
-  header: {
-    backgroundColor: "transparent",
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 60,
-    marginBottom: -60,
-    gap: 1,
-  },
-  headerTitle: {
-    fontSize: 44,
-    fontWeight: "bold",
-    color: Colors.default.text,
-    letterSpacing: 1,
-    lineHeight: 60,
-  },
-  card: {
-    padding: 22,
-    borderRadius: 18,
-    gap: 10,
-    backgroundColor: "#313a42ff",
-    // Sombra para iOS
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.09,
-    shadowRadius: 8,
-    // Sombra para Android
-    elevation: 4,
-    borderWidth: 1,
-  },
-  cardIconCircle: {
-    backgroundColor: Colors.default.background,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 2,
-    alignSelf: "flex-start",
-  },
-  cardIcon: {
-    fontSize: 28,
-  },
-  cardTitle: {
-    fontWeight: "bold",
-    fontSize: 18,
-    color: Colors.default.text,
-    marginBottom: 2,
-  },
-  cardText: {
-    fontSize: 15,
-    lineHeight: 22,
-    opacity: 0.92,
-    color: Colors.default.text,
+  infoCardText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: Colors.default.textSecondary,
   },
 });

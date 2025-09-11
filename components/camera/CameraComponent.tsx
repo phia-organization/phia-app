@@ -11,13 +11,16 @@ import PhotoPreviewSection from "./CameraPreviewPhoto";
 export default function CameraComponent({
   permissionAccepted,
   setPermissionAccepted,
+  photo,
+  setPhoto,
 }: {
   permissionAccepted: boolean;
   setPermissionAccepted: (value: boolean) => void;
+  photo: any;
+  setPhoto: (value: any) => void;
 }) {
   const isFocused = useIsFocused();
   const [permission, requestPermission] = useCameraPermissions();
-  const [photo, setPhoto] = useState<any>(null);
   const cameraRef = useRef<CameraView | null>(null);
   const [loading, setLoading] = useState(false);
   const [checkedPermission, setCheckedPermission] = useState(false);
