@@ -1,3 +1,4 @@
+import { SuccessModal } from "@/components/SuccessModal";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,6 +28,7 @@ const SavePh: React.FC = () => {
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const handleSave = async () => {
     if (!title || !user || !location || !description) {
@@ -57,15 +59,17 @@ const SavePh: React.FC = () => {
       records.push(data);
       await AsyncStorage.setItem("phRecords", JSON.stringify(records));
 
-      setTimeout(() => {
-        Alert.alert("Sucesso", "Medição salva com sucesso!");
-        router.push("/history");
-        setIsLoading(false);
-      }, 500);
+      setIsLoading(false);
+      setIsModalVisible(true);
     } catch (error) {
       Alert.alert("Erro", "Não foi possível salvar os dados.");
       setIsLoading(false);
     }
+  };
+
+  const handleCloseModalAndNavigate = () => {
+    setIsModalVisible(false);
+    router.push("/history");
   };
 
   return (
@@ -179,6 +183,13 @@ const SavePh: React.FC = () => {
           )}
         </TouchableOpacity>
       </ScrollView>
+      <SuccessModal
+        visible={isModalVisible}
+        onClose={handleCloseModalAndNavigate}
+        title="Sucesso!"
+        message="Sua medição de pH foi salva e adicionada ao seu histórico."
+        buttonText="Ver Histórico"
+      />
     </View>
   );
 };
