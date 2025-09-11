@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 700,
     lineHeight: 32,
   },

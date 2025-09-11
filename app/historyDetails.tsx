@@ -107,7 +107,7 @@ export default function HistoryDetails() {
               Valor do pH
             </ThemedText>
             <ThemedText style={{ ...styles.resultsValue, textAlign: "center" }}>
-              {parsedItem.ph}
+              {Number(parsedItem.ph).toFixed(1)}
             </ThemedText>
           </View>
           <View

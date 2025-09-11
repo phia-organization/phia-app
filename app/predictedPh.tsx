@@ -96,6 +96,9 @@ export default function PredictedPh() {
         >
           <Ionicons name="arrow-back" size={24} color={Colors.default.text} />
         </TouchableOpacity>
+        <ThemedText type="title" style={{ color: Colors.default.text }}>
+          Resultado da Análise
+        </ThemedText>
       </View>
 
       <View style={styles.content}>
@@ -168,9 +171,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   header: {
+    display: "flex",
+    flexDirection: "row",
+    gap: 8,
+    backgroundColor: Colors.default.primary,
     width: "100%",
     paddingLeft: 16,
-    paddingTop: 40,
+    paddingTop: 60,
+    paddingBottom: 12,
     alignItems: "flex-start",
   },
   backButton: {
@@ -202,6 +210,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   buttonContainer: {
+    backgroundColor: Colors.default.primary,
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",

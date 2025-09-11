@@ -130,7 +130,9 @@ export default function History() {
                 </View>
 
                 <View style={styles.phValueContainer}>
-                  <ThemedText style={styles.phValueText}>{item.ph}</ThemedText>
+                  <ThemedText style={styles.phValueText}>
+                    {Number(item.ph).toFixed(1)}
+                  </ThemedText>
                   <ThemedText
                     style={[styles.phLevelText, { color: item.phColor }]}
                   >

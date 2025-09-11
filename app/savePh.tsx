@@ -81,9 +81,7 @@ const SavePh: React.FC = () => {
         >
           <Ionicons name="arrow-back" size={24} color={Colors.default.text} />
         </TouchableOpacity>
-        <ThemedText type="subtitle" style={styles.headerTitle}>
-          Salvar Medição
-        </ThemedText>
+        <ThemedText type="title">Salvar Medição</ThemedText>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
