@@ -1,5 +1,8 @@
+import { ThemedText } from "@/components/ThemedText";
+import { Colors, pHValueColors } from "@/constants/Colors"; // NOVO: Usando nossa paleta de cores
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function CameraInstructionsOverlay({
   onConfirm,
@@ -8,170 +11,145 @@ export default function CameraInstructionsOverlay({
   onConfirm: () => void;
   onDontShowAgain: () => void;
 }) {
+  // NOVO: Componente para desenhar os cantos, igual ao CameraFrameOverlay
+  const Corner = ({
+    position,
+  }: {
+    position: "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+  }) => {
+    const baseStyle = {
+      position: "absolute",
+      width: BORDER_SIZE,
+      height: BORDER_SIZE,
+      borderColor: Colors.default.accent,
+      borderWidth: 2,
+    } as const;
+
+    const stylesMap = {
+      topLeft: {
+        top: 0,
+        left: 0,
+        borderRightWidth: 0,
+        borderBottomWidth: 0,
+        borderTopLeftRadius: 8,
+      },
+      topRight: {
+        top: 0,
+        right: 0,
+        borderLeftWidth: 0,
+        borderBottomWidth: 0,
+        borderTopRightRadius: 8,
+      },
+      bottomLeft: {
+        bottom: 0,
+        left: 0,
+        borderRightWidth: 0,
+        borderTopWidth: 0,
+        borderBottomLeftRadius: 8,
+      },
+      bottomRight: {
+        bottom: 0,
+        right: 0,
+        borderLeftWidth: 0,
+        borderTopWidth: 0,
+        borderBottomRightRadius: 8,
+      },
+    };
+
+    return <View style={[baseStyle, stylesMap[position]]} />;
+  };
+
   return (
     <View style={styles.overlayContainer}>
       <View style={styles.centerContainer}>
-        <View
-          style={{
-            position: "relative",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {/* Container para bordas */}
+        <View style={styles.visualGuideContainer}>
           <View style={styles.bordersContainer} pointerEvents="none">
-            {/* Top Left */}
-            <Image
-              source={require("@/assets/images/border.png")}
-              alt="top-left"
-              style={[styles.corner, styles.topLeft]}
-            />
-            {/* Top Right */}
-            <Image
-              source={require("@/assets/images/border.png")}
-              alt="top-right"
-              style={[
-                styles.corner,
-                styles.topRight,
-                { transform: [{ scaleX: -1 }] },
-              ]}
-            />
-            {/* Bottom Left */}
-            <Image
-              source={require("@/assets/images/border.png")}
-              alt="bottom-left"
-              style={[
-                styles.corner,
-                styles.bottomLeft,
-                { transform: [{ scaleY: -1 }] },
-              ]}
-            />
-            {/* Bottom Right */}
-            <Image
-              source={require("@/assets/images/border.png")}
-              alt="bottom-right"
-              style={[
-                styles.corner,
-                styles.bottomRight,
-                { transform: [{ scaleX: -1 }, { scaleY: -1 }] },
-              ]}
-            />
+            <Corner position="topLeft" />
+            <Corner position="topRight" />
+            <Corner position="bottomLeft" />
+            <Corner position="bottomRight" />
           </View>
-          {/* Fita de pH */}
           <View style={styles.stripPlaceholder}>
             <View
-              style={{
-                flex: 1,
-                backgroundColor: "#FAD643",
-                borderRadius: 2,
-                borderWidth: 1,
-                borderColor: "#fff",
-              }}
+              style={{ flex: 1, backgroundColor: pHValueColors["Ácido Leve"] }}
+            />
+            <View
+              style={{ flex: 1, backgroundColor: pHValueColors["Base Leve"] }}
             />
             <View
               style={{
                 flex: 1,
-                backgroundColor: "#8DC655",
-                borderRadius: 2,
-                borderWidth: 1,
-                borderColor: "#fff",
+                backgroundColor: pHValueColors["Base Moderada"],
               }}
             />
             <View
-              style={{
-                flex: 1,
-                backgroundColor: "#14AF9A",
-                borderRadius: 2,
-                borderWidth: 1,
-                borderColor: "#fff",
-              }}
-            />
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: "#42378C",
-                borderRadius: 2,
-                borderWidth: 1,
-                borderColor: "#fff",
-              }}
+              style={{ flex: 1, backgroundColor: pHValueColors["Base Forte"] }}
             />
           </View>
         </View>
       </View>
 
       <View style={styles.instructionsBox}>
-        <Text style={styles.title}>Aviso</Text>
-        <Text style={styles.description}>
-          Para escanear a fita, enquadre-a com o cabo voltado para baixo e tente
-          deixá-la o mais reta possível
-        </Text>
+        <View style={styles.header}>
+          <Ionicons
+            name="information-circle-outline"
+            size={28}
+            color={Colors.default.accent}
+          />
+          <ThemedText type="title" style={styles.title}>
+            Instruções
+          </ThemedText>
+        </View>
+        <ThemedText style={styles.description}>
+          Posicione a fita de pH na área demarcada pela câmera, com o cabo
+          voltado para baixo.
+        </ThemedText>
 
         <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
-          <Text style={styles.confirmButtonText}>Confirmar</Text>
+          <Text style={styles.confirmButtonText}>Entendi</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.dontShowButton}
           onPress={onDontShowAgain}
         >
-          <Text style={styles.dontShowButtonText}>Não Exibir Novamente</Text>
+          <Text style={styles.dontShowButtonText}>Não exibir novamente</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-const STRIP_WIDTH = 60;
-const STRIP_HEIGHT = 350;
 const BORDER_SIZE = 40;
 
 const styles = StyleSheet.create({
   overlayContainer: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "center",
-    paddingVertical: 24,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
   },
   centerContainer: {
-    flex: 1,
-    position: "relative",
-    justifyContent: "flex-end",
-    marginBottom: 0,
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
     alignItems: "center",
+    bottom: 250,
+  },
+  visualGuideContainer: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
   },
   bordersContainer: {
     position: "absolute",
-    width: STRIP_WIDTH + 56,
-    height: STRIP_HEIGHT / 1.2 + 8,
-    left: -28,
-    top: -20,
-    zIndex: 2,
-  },
-  corner: {
-    position: "absolute",
-    width: BORDER_SIZE,
-    height: BORDER_SIZE,
-    borderRadius: 8,
-  },
-  topLeft: {
-    top: 0,
-    left: 0,
-  },
-  topRight: {
-    top: 0,
-    right: 0,
-  },
-  bottomLeft: {
-    bottom: 0,
-    left: 0,
-  },
-  bottomRight: {
-    bottom: 0,
-    right: 0,
+    width: 116,
+    height: 300,
+    zIndex: 10,
+    elevation: 10,
   },
   stripPlaceholder: {
-    width: STRIP_WIDTH,
-    height: STRIP_HEIGHT,
+    width: 60,
+    height: 350,
     padding: 8,
     paddingBottom: "25%",
     gap: 8,
@@ -180,52 +158,58 @@ const styles = StyleSheet.create({
     borderColor: "#4B4B4B",
     borderTopEndRadius: 8,
     borderTopStartRadius: 8,
-    marginBottom: -3,
+    marginBottom: -100,
     zIndex: 1,
   },
   instructionsBox: {
     width: "100%",
-    backgroundColor: "#0B1525",
+    backgroundColor: Colors.default.primary,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingVertical: 24,
-    paddingHorizontal: 20,
+    padding: 24,
+    paddingBottom: 40,
     alignItems: "center",
-    zIndex: 3,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 16,
   },
   title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    marginBottom: 8,
+    fontSize: 22,
+    color: Colors.default.text,
   },
   description: {
-    fontSize: 14,
+    fontSize: 15,
     textAlign: "center",
-    color: "#D1D5DB",
-    marginBottom: 20,
+    color: Colors.default.textSecondary,
+    marginBottom: 24,
+    lineHeight: 22,
   },
   confirmButton: {
     width: "100%",
-    backgroundColor: "#4B5563",
+    backgroundColor: Colors.default.accent,
     borderRadius: 12,
-    paddingVertical: 12,
-    marginBottom: 12,
+    paddingVertical: 14,
+    marginBottom: 16,
   },
   confirmButtonText: {
-    color: "#FFFFFF",
+    color: Colors.default.primary,
     fontSize: 16,
+    fontWeight: "bold",
     textAlign: "center",
   },
   dontShowButton: {
     width: "100%",
-    backgroundColor: "#DC2626",
+    backgroundColor: Colors.default.card,
     borderRadius: 12,
-    paddingVertical: 12,
+    paddingVertical: 14,
   },
   dontShowButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
+    width: "100%",
+    color: Colors.default.text,
+    fontSize: 14,
     textAlign: "center",
   },
 });

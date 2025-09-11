@@ -140,6 +140,16 @@ export default function History() {
                 </View>
               </View>
 
+              <View
+                style={{
+                  height: "60%",
+                  width: 1,
+                  backgroundColor: Colors.default.textSecondary,
+                  marginRight: -3,
+                  marginLeft: 4,
+                }}
+              />
+
               <TouchableOpacity
                 onPress={() => deleteItem(item.date)}
                 style={styles.deleteButton}

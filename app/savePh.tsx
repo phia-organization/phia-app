@@ -102,6 +102,22 @@ const SavePh: React.FC = () => {
         </View>
 
         <View style={styles.inputGroup}>
+          <ThemedText style={styles.label}>Resultado Detectado</ThemedText>
+          <View style={styles.resultCardContainer}>
+            <View
+              style={[styles.resultColorBar, { backgroundColor: phColor }]}
+            />
+
+            <View style={styles.resultTextContainer}>
+              <Text style={[styles.resultValue, { color: phColor }]}>
+                {parseFloat(ph!).toFixed(1)}
+              </Text>
+              <ThemedText style={styles.resultLevel}>{phLevel}</ThemedText>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
           <ThemedText style={styles.label}>Título da Medição</ThemedText>
           <TextInput
             style={styles.input}
@@ -142,18 +158,6 @@ const SavePh: React.FC = () => {
             placeholderTextColor={Colors.default.textSecondary}
             multiline
           />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <ThemedText style={styles.label}>Valor do pH (Detectado)</ThemedText>
-          <Text
-            style={[
-              styles.phValueDisplay,
-              { color: phColor, borderColor: phColor },
-            ]}
-          >
-            {ph}
-          </Text>
         </View>
 
         <TouchableOpacity
@@ -250,7 +254,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 24,
     gap: 10,
-    // Sombra
     shadowColor: Colors.default.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -261,6 +264,35 @@ const styles = StyleSheet.create({
     color: Colors.default.primary,
     fontSize: 16,
     fontWeight: "bold",
+  },
+  resultCardContainer: {
+    flexDirection: "row",
+    backgroundColor: Colors.default.card,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    overflow: "hidden",
+  },
+  resultColorBar: {
+    width: 10,
+  },
+  resultTextContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  resultValue: {
+    fontFamily: "SpaceMono",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  resultLevel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.default.text,
   },
 });
 

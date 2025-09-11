@@ -11,15 +11,15 @@ import {
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 
-const STRIP_WIDTH = 45;
+const STRIP_WIDTH = 70;
 const STRIP_HEIGHT = 300;
-const BORDER_CORNER_SIZE = 35;
-const BORDER_THICKNESS = 7;
+const BORDER_CORNER_SIZE = 40;
+const BORDER_THICKNESS = 3;
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-const CENTER_WIDTH = STRIP_WIDTH + BORDER_CORNER_SIZE * 2;
-const CENTER_HEIGHT = STRIP_HEIGHT + BORDER_CORNER_SIZE * 2;
+const CENTER_WIDTH = STRIP_WIDTH + BORDER_CORNER_SIZE;
+const CENTER_HEIGHT = STRIP_HEIGHT + BORDER_CORNER_SIZE;
 
 const SIDE_WIDTH = (SCREEN_WIDTH - CENTER_WIDTH) / 2;
 const VERTICAL_PADDING = (SCREEN_HEIGHT - CENTER_HEIGHT) / 2;
@@ -45,65 +45,53 @@ export default function CameraFrameOverlay({
   const renderCorner = (
     position: "topLeft" | "topRight" | "bottomLeft" | "bottomRight"
   ) => {
-    let cornerStyle: any = {
+    const baseStyle = {
       position: "absolute",
       width: BORDER_CORNER_SIZE,
       height: BORDER_CORNER_SIZE,
       borderColor: Colors.default.accent,
+      borderWidth: BORDER_THICKNESS,
+    } as const;
+
+    const stylesMap = {
+      topLeft: {
+        top: -2,
+        left: -2,
+        borderRightWidth: 0,
+        borderBottomWidth: 0,
+        borderTopLeftRadius: 8,
+      },
+      topRight: {
+        top: -2,
+        right: -2,
+        borderLeftWidth: 0,
+        borderBottomWidth: 0,
+        borderTopRightRadius: 8,
+      },
+      bottomLeft: {
+        bottom: -2,
+        left: -2,
+        borderRightWidth: 0,
+        borderTopWidth: 0,
+        borderBottomLeftRadius: 8,
+      },
+      bottomRight: {
+        bottom: -2,
+        right: -2,
+        borderLeftWidth: 0,
+        borderTopWidth: 0,
+        borderBottomRightRadius: 8,
+      },
     };
 
-    switch (position) {
-      case "topLeft":
-        cornerStyle = {
-          ...cornerStyle,
-          top: 0,
-          left: 0,
-          borderTopWidth: BORDER_THICKNESS,
-          borderLeftWidth: BORDER_THICKNESS,
-          borderTopLeftRadius: 4,
-        };
-        break;
-      case "topRight":
-        cornerStyle = {
-          ...cornerStyle,
-          top: 0,
-          right: 0,
-          borderTopWidth: BORDER_THICKNESS,
-          borderRightWidth: BORDER_THICKNESS,
-          borderTopRightRadius: 4,
-        };
-        break;
-      case "bottomLeft":
-        cornerStyle = {
-          ...cornerStyle,
-          bottom: 0,
-          left: 0,
-          borderBottomWidth: BORDER_THICKNESS,
-          borderLeftWidth: BORDER_THICKNESS,
-          borderBottomLeftRadius: 4,
-        };
-        break;
-      case "bottomRight":
-        cornerStyle = {
-          ...cornerStyle,
-          bottom: 0,
-          right: 0,
-          borderBottomWidth: BORDER_THICKNESS,
-          borderRightWidth: BORDER_THICKNESS,
-          borderBottomRightRadius: 4,
-        };
-        break;
-    }
-    return <View style={cornerStyle} />;
+    return <View style={[baseStyle, stylesMap[position]]} />;
   };
 
   return (
     <View style={styles.overlayContainer}>
       <View style={[styles.dimmedHorizontal, { height: VERTICAL_PADDING }]} />
-
       <View style={styles.row}>
         <View style={[styles.dimmedVertical, { width: SIDE_WIDTH }]} />
-
         <View style={styles.centerContainer}>
           {permissionAccepted ? (
             <>
@@ -119,6 +107,7 @@ export default function CameraFrameOverlay({
             </>
           ) : (
             <View style={styles.permissionDeniedContainer}>
+              {/* O ícone aqui estava 'camera-reverse', mudei para 'camera-off-outline' que parece mais apropriado */}
               <Ionicons
                 name="camera-reverse"
                 size={48}
@@ -141,10 +130,8 @@ export default function CameraFrameOverlay({
             </View>
           )}
         </View>
-
         <View style={[styles.dimmedVertical, { width: SIDE_WIDTH }]} />
       </View>
-
       <View style={[styles.dimmedHorizontal, { height: VERTICAL_PADDING }]} />
     </View>
   );
@@ -182,11 +169,13 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: CENTER_WIDTH,
     height: CENTER_HEIGHT,
+    zIndex: 10,
+    elevation: 10,
   },
   instructionText: {
     position: "absolute",
     width: Dimensions.get("window").width,
-    top: -VERTICAL_PADDING / 3 + 20,
+    top: -VERTICAL_PADDING / 3 + 40,
     textAlign: "center",
     fontSize: 16,
     color: Colors.default.text,
