@@ -79,6 +79,17 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={{ marginBottom: 24, width: "100%" }}>
+          <Image
+            source={require("@/assets/images/hero.jpeg")}
+            style={{
+              width: "100%",
+              height: 250,
+              resizeMode: "cover",
+              borderRadius: 12,
+            }}
+          />
+        </View>
         <ThemedText style={styles.welcomeText}>
           A análise de pH na palma da sua mão.
         </ThemedText>
@@ -169,13 +180,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingTop: 60,
+    paddingHorizontal: 16,
     paddingBottom: 16,
     backgroundColor: Colors.default.primary,
   },
   logo: {
     width: 36,
     height: 36,
-    marginRight: 8,
+    marginRight: 4,
   },
   headerTitle: {
     fontSize: 28,
