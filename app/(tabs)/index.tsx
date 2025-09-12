@@ -80,7 +80,7 @@ export default function HomeScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={{ marginBottom: 24, width: "100%" }}>
-          <Image
+          {/*  <Image
             source={require("@/assets/images/hero.jpeg")}
             style={{
               width: "100%",
@@ -88,7 +88,7 @@ export default function HomeScreen() {
               resizeMode: "cover",
               borderRadius: 12,
             }}
-          />
+          /> */}
         </View>
         <ThemedText style={styles.welcomeText}>
           A análise de pH na palma da sua mão.
@@ -134,7 +134,13 @@ export default function HomeScreen() {
             </View>
           ) : (
             <View style={styles.emptyRecentCard}>
-              <ThemedText style={{ color: Colors.default.textSecondary }}>
+              <ThemedText
+                style={{
+                  color: Colors.default.textSecondary,
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
                 Nenhuma medição ainda.
               </ThemedText>
             </View>
@@ -262,7 +268,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.default.card,
     borderRadius: 12,
     padding: 20,
-    alignItems: "center",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.1)",
   },
