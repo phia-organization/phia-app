@@ -4,7 +4,7 @@ import { Colors } from "@/constants/Colors";
 import { temp_storage } from "@/utils/temp_storage";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { documentDirectory, moveAsync } from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -55,10 +55,10 @@ const SavePh: React.FC = () => {
 
     setIsLoading(true);
     const fileName = `phia_image_${Date.now()}.jpg`;
-    const newImageUri = documentDirectory + "/" + fileName;
+    const newImageUri = FileSystem.documentDirectory + "/" + fileName;
 
     try {
-      await moveAsync({
+      await FileSystem.moveAsync({
         from: imageUri,
         to: newImageUri,
       });
