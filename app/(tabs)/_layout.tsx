@@ -1,47 +1,121 @@
-import { Tabs } from "expo-router";
-import React from "react";
-import { Platform } from "react-native";
-
-import { HapticTab } from "@/components/HapticTab";
-import { IconSymbol } from "@/components/ui/IconSymbol";
+import { CustomTabButton } from "@/components/CustomTabButton";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
+import { emitCameraTakePhoto } from "@/utils/camera-events";
+import { Ionicons } from "@expo/vector-icons";
+import { Tabs, usePathname, useRouter } from "expo-router";
+import React from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 export default function TabLayout() {
+  const router = useRouter();
+  const pathname = usePathname();
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.default.tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: "absolute",
-          },
-          default: {},
-        }),
+        tabBarBackground: () => <TabBarBackground />,
+        tabBarStyle: {
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 85,
+          backgroundColor: "transparent",
+          borderWidth: 0,
+          elevation: 0,
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
-          ),
+          tabBarButton: () => {
+            const isActive = pathname === "/";
+            console.log(pathname);
+            return (
+              <CustomTabButton
+                iconName={isActive ? "home" : "home-outline"}
+                label="Início"
+                path="/(tabs)"
+                isActive={isActive}
+              />
+            );
+          },
+        }}
+      />
+      <Tabs.Screen
+        name="camera"
+        options={{
+          tabBarButton: () => {
+            const isActive = pathname === "/camera";
+            return (
+              <View style={styles.cameraButtonContainer}>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (isActive) {
+                      emitCameraTakePhoto();
+                    } else {
+                      router.push("/camera");
+                    }
+                  }}
+                  style={styles.cameraButton}
+                >
+                  <Ionicons
+                    name="camera-outline"
+                    size={32}
+                    color={Colors.default.primary}
+                  />
+                </TouchableOpacity>
+              </View>
+            );
+          },
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
-          title: "Histórico",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
-          ),
+          tabBarButton: () => {
+            const isActive = pathname === "/history";
+            return (
+              <CustomTabButton
+                iconName={isActive ? "time" : "time-outline"}
+                label="Histórico"
+                path="/history"
+                isActive={isActive}
+              />
+            );
+          },
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  cameraButtonContainer: {
+    flex: 1,
+    borderColor: "transparent",
+    marginTop: -30,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cameraButton: {
+    width: 60,
+    height: 60,
+    borderRadius: "40%",
+    backgroundColor: Colors.default.accent,
+    justifyContent: "center",
+    alignItems: "center",
+    transform: [{ translateY: -25 }],
+    shadowColor: Colors.default.accent,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+});
