@@ -1,5 +1,6 @@
 import { Prediction } from "@/types/prediction";
 import { subscribeToCameraTakePhoto } from "@/utils/camera-events";
+import { temp_storage } from "@/utils/temp_storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useIsFocused } from "@react-navigation/native";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -112,36 +113,9 @@ export default function CameraComponent({
 
   const handleSavePhoto = async () => {
     if (!photo) return;
-    console.log("Iniciando upload da foto...");
     setLoading(true);
-    // try {
-    //   const { uri } = photo;
-    //   const fileType = uri.split('.').pop() || 'jpg';
-    //   const fileName = `photo_${Date.now()}.${fileType}`;
 
-    //   const formData = new FormData();
-    //   formData.append('file', {
-    //     uri,
-    //     name: fileName,
-    //     type: `image/${fileType}`,
-    //   } as any);
-
-    //   const response = await fetchClientMultipart<Prediction>('/predict', {
-    //     method: 'POST',
-    //     body: formData,
-    //     auth: false,
-    //   });
-
-    //   storeData(response);
-
-    //   console.log('✔️ Upload realizado:', response.url);
-    //   // … faça o que precisar com a URL retornada
-    // } catch (err) {
-    //   console.error('Falha no upload da foto:', err);
-    //   // trate o erro para o usuário (toast, alert, etc.)
-    // }
-
-    storeNewPrediction({
+    await storeNewPrediction({
       predicted_ph: Math.floor(Math.random() * 14),
       rgbs: {
         q1: { r: 255, g: 0, b: 0 },
@@ -152,6 +126,11 @@ export default function CameraComponent({
     } as Prediction);
 
     setLoading(false);
+
+    console.log(photo.uri, "camera");
+
+    temp_storage.captured_photo = photo;
+
     router.push("/predictedPh");
   };
 

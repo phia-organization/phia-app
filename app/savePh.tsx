@@ -1,13 +1,18 @@
 import { AlertModal } from "@/components/AlertModal";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
+import { temp_storage } from "@/utils/temp_storage";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { documentDirectory, moveAsync } from "expo-file-system";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,6 +28,9 @@ const SavePh: React.FC = () => {
     phLevel: string;
   }>();
 
+  const capturedPhoto = temp_storage.captured_photo;
+  const imageUri = capturedPhoto?.uri;
+
   const [title, setTitle] = useState("");
   const [user, setUser] = useState("");
   const [location, setLocation] = useState("");
@@ -36,25 +44,37 @@ const SavePh: React.FC = () => {
       setIsEmptyFields(true);
       return;
     }
+    if (!imageUri) {
+      Alert.alert("Erro", "Nenhuma imagem encontrada para salvar.");
+      return;
+    }
     if (!ph) {
       Alert.alert("Erro", "Valor de pH não foi encontrado.");
       return;
     }
 
     setIsLoading(true);
-
-    const data = {
-      title,
-      user,
-      location,
-      description,
-      ph,
-      date: new Date().toISOString(),
-      phColor,
-      phLevel,
-    };
+    const fileName = `phia_image_${Date.now()}.jpg`;
+    const newImageUri = documentDirectory + "/" + fileName;
 
     try {
+      await moveAsync({
+        from: imageUri,
+        to: newImageUri,
+      });
+
+      const data = {
+        title,
+        user,
+        location,
+        description,
+        ph,
+        date: new Date().toISOString(),
+        phColor,
+        phLevel,
+        imageUri: newImageUri,
+      };
+
       const existing = await AsyncStorage.getItem("phRecords");
       const records = existing ? JSON.parse(existing) : [];
       records.push(data);
@@ -63,6 +83,7 @@ const SavePh: React.FC = () => {
       setIsLoading(false);
       setIsModalVisible(true);
     } catch (error) {
+      console.error("O ERRO DETALHADO AO SALVAR É:", error);
       Alert.alert("Erro", "Não foi possível salvar os dados.");
       setIsLoading(false);
     }
@@ -72,6 +93,12 @@ const SavePh: React.FC = () => {
     setIsModalVisible(false);
     router.push("/history");
   };
+
+  useEffect(() => {
+    return () => {
+      temp_storage.captured_photo = null;
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -85,103 +112,115 @@ const SavePh: React.FC = () => {
         <ThemedText type="title">Salvar Medição</ThemedText>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.imagePlaceholder}>
-          <Ionicons
-            name="image-outline"
-            size={48}
-            color={Colors.default.textSecondary}
-          />
-          <View style={{ width: "100%" }}>
-            <ThemedText
-              style={{
-                color: Colors.default.textSecondary,
-                textAlign: "center",
-              }}
-            >
-              Prévia da Fita de pH
-            </ThemedText>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={0}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.imagePlaceholder}>
+            {imageUri ? (
+              <Image source={{ uri: imageUri }} style={styles.previewImage} />
+            ) : (
+              <>
+                <Ionicons
+                  name="image-outline"
+                  size={48}
+                  color={Colors.default.textSecondary}
+                />
+                <View style={{ width: "100%" }}>
+                  <ThemedText
+                    style={{
+                      color: Colors.default.textSecondary,
+                      textAlign: "center",
+                    }}
+                  >
+                    Prévia da Fita de pH
+                  </ThemedText>
+                </View>
+              </>
+            )}
           </View>
-        </View>
 
-        <View style={styles.inputGroup}>
-          <ThemedText style={styles.label}>Resultado Detectado</ThemedText>
-          <View style={styles.resultCardContainer}>
-            <View
-              style={[styles.resultColorBar, { backgroundColor: phColor }]}
-            />
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>Resultado Detectado</ThemedText>
+            <View style={styles.resultCardContainer}>
+              <View
+                style={[styles.resultColorBar, { backgroundColor: phColor }]}
+              />
 
-            <View style={styles.resultTextContainer}>
-              <Text style={[styles.resultValue, { color: phColor }]}>
-                {parseFloat(ph!).toFixed(1)}
-              </Text>
-              <ThemedText style={styles.resultLevel}>{phLevel}</ThemedText>
+              <View style={styles.resultTextContainer}>
+                <Text style={[styles.resultValue, { color: phColor }]}>
+                  {parseFloat(ph!).toFixed(1)}
+                </Text>
+                <ThemedText style={styles.resultLevel}>{phLevel}</ThemedText>
+              </View>
             </View>
           </View>
-        </View>
 
-        <View style={styles.inputGroup}>
-          <ThemedText style={styles.label}>Título da Medição</ThemedText>
-          <TextInput
-            style={styles.input}
-            value={title}
-            onChangeText={setTitle}
-            placeholder={"Ex: pH da Piscina"}
-            placeholderTextColor={Colors.default.textSecondary}
-          />
-        </View>
-        <View style={styles.inputGroup}>
-          <ThemedText style={styles.label}>Nome do Usuário</ThemedText>
-          <TextInput
-            style={styles.input}
-            value={user}
-            onChangeText={setUser}
-            placeholder="Seu nome"
-            placeholderTextColor={Colors.default.textSecondary}
-          />
-        </View>
-        <View style={styles.inputGroup}>
-          <ThemedText style={styles.label}>Local da Medição</ThemedText>
-          <TextInput
-            style={styles.input}
-            value={location}
-            onChangeText={setLocation}
-            placeholder="Ex: Laboratório"
-            placeholderTextColor={Colors.default.textSecondary}
-          />
-        </View>
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>Título da Medição</ThemedText>
+            <TextInput
+              style={styles.input}
+              value={title}
+              onChangeText={setTitle}
+              placeholder={"Ex: pH da Piscina"}
+              placeholderTextColor={Colors.default.textSecondary}
+            />
+          </View>
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>Nome do Usuário</ThemedText>
+            <TextInput
+              style={styles.input}
+              value={user}
+              onChangeText={setUser}
+              placeholder="Seu nome"
+              placeholderTextColor={Colors.default.textSecondary}
+            />
+          </View>
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>Local da Medição</ThemedText>
+            <TextInput
+              style={styles.input}
+              value={location}
+              onChangeText={setLocation}
+              placeholder="Ex: Laboratório"
+              placeholderTextColor={Colors.default.textSecondary}
+            />
+          </View>
 
-        <View style={styles.inputGroup}>
-          <ThemedText style={styles.label}>Descrição</ThemedText>
-          <TextInput
-            style={[styles.input, { height: 80 }]}
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Detalhes adicionais..."
-            placeholderTextColor={Colors.default.textSecondary}
-            multiline
-          />
-        </View>
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>Descrição</ThemedText>
+            <TextInput
+              style={[styles.input, { height: 80 }]}
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Detalhes adicionais..."
+              placeholderTextColor={Colors.default.textSecondary}
+              multiline
+            />
+          </View>
 
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSave}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color={Colors.default.primary} />
-          ) : (
-            <>
-              <Ionicons
-                name="save-outline"
-                size={22}
-                color={Colors.default.primary}
-              />
-              <Text style={styles.saveButtonText}>Salvar Medição</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleSave}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color={Colors.default.primary} />
+            ) : (
+              <>
+                <Ionicons
+                  name="save-outline"
+                  size={22}
+                  color={Colors.default.primary}
+                />
+                <Text style={styles.saveButtonText}>Salvar Medição</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <AlertModal
         visible={isEmptyFields}
@@ -238,7 +277,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   imagePlaceholder: {
-    height: 150,
+    minHeight: 150,
     width: "100%",
     backgroundColor: Colors.default.card,
     borderRadius: 12,
@@ -323,6 +362,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: Colors.default.text,
+  },
+  previewImage: {
+    width: "80%",
+    aspectRatio: 1,
+    borderRadius: 12,
+    resizeMode: "cover",
+    marginVertical: 30,
   },
 });
 

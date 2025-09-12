@@ -1,3 +1,12 @@
+import { AlertModal } from "@/components/AlertModal";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { Colors } from "@/constants/Colors";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { deleteAsync } from "expo-file-system";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
   Dimensions,
   ScrollView,
@@ -6,25 +15,24 @@ import {
   View,
 } from "react-native";
 
-import { AlertModal } from "@/components/AlertModal";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { Colors } from "@/constants/Colors";
-import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
+interface ItemDateToDelete {
+  date: string;
+  imageUri: string;
+}
+
+interface ModalState {
+  visible: boolean;
+  itemDateToDelete: ItemDateToDelete | null;
+}
 
 export default function History() {
   const router = useRouter();
 
-  const [modalState, setModalState] = useState<{
-    visible: boolean;
-    itemDateToDelete: string | null;
-  }>({
+  const [modalState, setModalState] = useState<ModalState>({
     visible: false,
     itemDateToDelete: null,
   });
+
   const [items, setItems] = useState<
     {
       date: string;
@@ -35,6 +43,7 @@ export default function History() {
       phColor: string;
       phLevel: string;
       user: string;
+      imageUri: string;
     }[]
   >([]);
 
@@ -61,7 +70,9 @@ export default function History() {
     setModalState({ visible: false, itemDateToDelete: null });
   };
 
-  async function deleteItem(dateToDelete: string) {
+  async function deleteItem(itemToDelete: { date: string; imageUri: string }) {
+    const { date: dateToDelete, imageUri } = itemToDelete;
+
     const data = await AsyncStorage.getItem("phRecords");
     if (data) {
       const parsedData = JSON.parse(data);
@@ -72,6 +83,12 @@ export default function History() {
       await AsyncStorage.setItem("phRecords", JSON.stringify(filteredData));
 
       setItems(sortRecords(filteredData));
+    }
+
+    try {
+      await deleteAsync(imageUri);
+    } catch (error) {
+      console.error("Erro ao deletar o arquivo de imagem:", error);
     }
   }
 
@@ -177,7 +194,13 @@ export default function History() {
 
               <TouchableOpacity
                 onPress={() =>
-                  setModalState({ visible: true, itemDateToDelete: item.date })
+                  setModalState({
+                    visible: true,
+                    itemDateToDelete: {
+                      date: item.date,
+                      imageUri: item.imageUri,
+                    },
+                  })
                 }
                 style={styles.deleteButton}
               >

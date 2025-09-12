@@ -22,6 +22,7 @@ type HistoryItem = {
   description: string;
   location: string;
   user: string;
+  imageUri: string;
 };
 
 export default function HistoryDetails() {
@@ -152,11 +153,27 @@ export default function HistoryDetails() {
         </View>
 
         <View style={styles.imageCard}>
-          <ThemedText style={styles.imageCardTitle}>
-            Fita de pH Registrada
-          </ThemedText>
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 12,
+              gap: 14,
+            }}
+          >
+            <Ionicons
+              name={"camera-outline"}
+              size={20}
+              color={Colors.default.accent}
+            />
+            <ThemedText style={styles.imageCardTitle}>
+              Fita de pH Registrada
+            </ThemedText>
+          </View>
+
           <Image
-            source={require("@/assets/images/ph-strip.png")}
+            source={{ uri: parsedItem.imageUri }}
             style={styles.image}
             resizeMode="contain"
           />
@@ -235,7 +252,6 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     marginRight: 16,
-    marginTop: 2,
   },
   infoLabel: {
     fontSize: 12,
@@ -257,15 +273,17 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.1)",
+    marginBottom: 40,
   },
   imageCardTitle: {
     color: Colors.default.textSecondary,
     fontSize: 12,
-    marginBottom: 12,
   },
   image: {
     width: "100%",
-    height: 150,
-    borderRadius: 8,
+    aspectRatio: 9 / 12,
+    borderRadius: 12,
+    resizeMode: "cover",
+    backgroundColor: Colors.default.background,
   },
 });

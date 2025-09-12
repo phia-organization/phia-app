@@ -148,7 +148,11 @@ export default function PredictedPh() {
           onPress={() =>
             router.push({
               pathname: "/savePh",
-              params: { ph: predictedPh?.toString(), phColor, phLevel },
+              params: {
+                ph: predictedPh?.toString(),
+                phColor,
+                phLevel,
+              },
             })
           }
         >
