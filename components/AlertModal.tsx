@@ -1,5 +1,3 @@
-// src/components/AlertModal.tsx
-
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
