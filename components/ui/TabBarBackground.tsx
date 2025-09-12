@@ -34,11 +34,6 @@ export default function TabBarBackground() {
       }}
     >
       <Path d={d} fill={Colors.default.primary} />
-      <Path
-        d={`M 0 1 L ${width} 1`}
-        stroke="rgba(255, 255, 255, 0.1)"
-        strokeWidth={1}
-      />
     </Svg>
   );
 }

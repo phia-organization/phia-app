@@ -6,18 +6,26 @@ import {
   View,
 } from "react-native";
 
+import { AlertModal } from "@/components/AlertModal";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
-import React, { useEffect } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
 
 export default function History() {
   const router = useRouter();
 
-  const [items, setItems] = React.useState<
+  const [modalState, setModalState] = useState<{
+    visible: boolean;
+    itemDateToDelete: string | null;
+  }>({
+    visible: false,
+    itemDateToDelete: null,
+  });
+  const [items, setItems] = useState<
     {
       date: string;
       title: string;
@@ -30,6 +38,13 @@ export default function History() {
     }[]
   >([]);
 
+  const sortRecords = (records: any[]) => {
+    return records.sort(
+      (a: any, b: any) =>
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  };
+
   function goToDetails(item: any) {
     router.push({
       pathname: "/historyDetails",
@@ -39,6 +54,13 @@ export default function History() {
     });
   }
 
+  const handleDeleteConfirm = async () => {
+    if (modalState.itemDateToDelete) {
+      await deleteItem(modalState.itemDateToDelete);
+    }
+    setModalState({ visible: false, itemDateToDelete: null });
+  };
+
   async function deleteItem(dateToDelete: string) {
     const data = await AsyncStorage.getItem("phRecords");
     if (data) {
@@ -46,25 +68,26 @@ export default function History() {
       const filteredData = parsedData.filter(
         (record: any) => record.date !== dateToDelete
       );
+
       await AsyncStorage.setItem("phRecords", JSON.stringify(filteredData));
-      setItems(filteredData);
+
+      setItems(sortRecords(filteredData));
     }
   }
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const data = await AsyncStorage.getItem("phRecords");
-      if (data) {
-        const parsedData = JSON.parse(data).sort(
-          (a: any, b: any) =>
-            new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
-        setItems(parsedData);
-      }
-    };
+  useFocusEffect(
+    useCallback(() => {
+      const fetchData = async () => {
+        const data = await AsyncStorage.getItem("phRecords");
+        if (data) {
+          const parsedData = JSON.parse(data);
+          setItems(sortRecords(parsedData));
+        }
+      };
 
-    fetchData();
-  }, []);
+      fetchData();
+    }, [])
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -88,6 +111,7 @@ export default function History() {
               style={{
                 color: Colors.default.textSecondary,
                 textAlign: "center",
+                width: "100%",
               }}
             >
               Suas medições de pH aparecerão aqui.
@@ -152,7 +176,9 @@ export default function History() {
               />
 
               <TouchableOpacity
-                onPress={() => deleteItem(item.date)}
+                onPress={() =>
+                  setModalState({ visible: true, itemDateToDelete: item.date })
+                }
                 style={styles.deleteButton}
               >
                 <Ionicons
@@ -165,6 +191,25 @@ export default function History() {
           ))
         )}
       </ScrollView>
+      <AlertModal
+        visible={modalState.visible}
+        type="error"
+        title="Confirmar Exclusão"
+        message="Esta ação é permanente. Tem certeza que deseja excluir este registro?"
+        actions={[
+          {
+            text: "Cancelar",
+            onPress: () =>
+              setModalState({ visible: false, itemDateToDelete: null }),
+            style: "secondary",
+          },
+          {
+            text: "Excluir",
+            onPress: handleDeleteConfirm,
+            style: "destructive",
+          },
+        ]}
+      />
     </ThemedView>
   );
 }

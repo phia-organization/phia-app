@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   },
   retakeButton: {
     backgroundColor: Colors.default.card,
-    borderRadius: 100,
+    borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 20,
     flexDirection: "row",
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.default.accent,
     paddingVertical: 12,
     paddingHorizontal: 20,
-    borderRadius: 100,
+    borderRadius: 12,
     gap: 8,
     shadowColor: Colors.default.accent,
     shadowOffset: {

@@ -1,4 +1,4 @@
-import { SuccessModal } from "@/components/SuccessModal";
+import { AlertModal } from "@/components/AlertModal";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,10 +29,11 @@ const SavePh: React.FC = () => {
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isEmptyFields, setIsEmptyFields] = useState(false);
 
   const handleSave = async () => {
     if (!title || !user || !location || !description) {
-      Alert.alert("Atenção", "Por favor, preencha todos os campos.");
+      setIsEmptyFields(true);
       return;
     }
     if (!ph) {
@@ -181,12 +182,32 @@ const SavePh: React.FC = () => {
           )}
         </TouchableOpacity>
       </ScrollView>
-      <SuccessModal
+
+      <AlertModal
+        visible={isEmptyFields}
+        type="warning"
+        title="Preencha Todos os Campos"
+        message="Para prosseguir é necessário preencher todos os campos!"
+        actions={[
+          {
+            text: "Confirmar",
+            onPress: () => setIsEmptyFields(false),
+            style: "primary",
+          },
+        ]}
+      />
+      <AlertModal
         visible={isModalVisible}
-        onClose={handleCloseModalAndNavigate}
+        type="success"
         title="Sucesso!"
         message="Sua medição de pH foi salva e adicionada ao seu histórico."
-        buttonText="Ver Histórico"
+        actions={[
+          {
+            text: "Ver Histórico",
+            onPress: handleCloseModalAndNavigate,
+            style: "primary",
+          },
+        ]}
       />
     </View>
   );
