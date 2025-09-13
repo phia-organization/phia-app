@@ -1,7 +1,5 @@
-import { Prediction } from "@/types/prediction";
 import { subscribeToCameraTakePhoto } from "@/utils/camera-events";
 import { temp_storage } from "@/utils/temp_storage";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useIsFocused } from "@react-navigation/native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
@@ -10,8 +8,6 @@ import { StyleSheet, View } from "react-native";
 import PhotoPreviewSection from "./CameraPreviewPhoto";
 
 export default function CameraComponent({
-  permissionAccepted,
-  setPermissionAccepted,
   photo,
   setPhoto,
 }: {
@@ -23,7 +19,6 @@ export default function CameraComponent({
   const isFocused = useIsFocused();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView | null>(null);
-  const [loading, setLoading] = useState(false);
   const [checkedPermission, setCheckedPermission] = useState(false);
 
   useEffect(() => {
@@ -35,48 +30,6 @@ export default function CameraComponent({
       }
     })();
   }, [permission]);
-
-  const getData = async () => {
-    try {
-      const jsonValue = await AsyncStorage.getItem("ph_predictions");
-      if (jsonValue !== null) {
-        const parsedPredictions = JSON.parse(jsonValue);
-        console.log("Stored data:", parsedPredictions);
-      }
-    } catch (e) {
-      // error reading value
-    }
-  };
-
-  const clearData = async () => {
-    try {
-      await AsyncStorage.removeItem("ph_predictions");
-    } catch (e) {
-      // saving error
-    }
-  };
-
-  const storeNewPrediction = async (newPrediction: Prediction) => {
-    try {
-      const existingJsonPredictions = await AsyncStorage.getItem(
-        "ph_predictions"
-      );
-
-      let existingPredictions: Prediction[] = [];
-      if (existingJsonPredictions !== null) {
-        existingPredictions = JSON.parse(existingJsonPredictions);
-      }
-
-      existingPredictions.push(newPrediction);
-
-      await AsyncStorage.setItem(
-        "ph_predictions",
-        JSON.stringify(existingPredictions)
-      );
-    } catch (e) {
-      console.error("Failed to store new prediction:", e);
-    }
-  };
 
   const handleTakePhoto = async () => {
     if (cameraRef.current) {
@@ -113,9 +66,8 @@ export default function CameraComponent({
 
   const handleSavePhoto = async () => {
     if (!photo) return;
-    setLoading(true);
 
-    await storeNewPrediction({
+    /* await storeNewPrediction({
       predicted_ph: Math.floor(Math.random() * 14),
       rgbs: {
         q1: { r: 255, g: 0, b: 0 },
@@ -123,15 +75,16 @@ export default function CameraComponent({
         q3: { r: 0, g: 0, b: 255 },
         q4: { r: 255, g: 255, b: 0 },
       },
-    } as Prediction);
-
-    setLoading(false);
-
-    console.log(photo.uri, "camera");
+    } as Prediction); */
 
     temp_storage.captured_photo = photo;
 
-    router.push("/predictedPh");
+    router.push({
+      pathname: "/predictedPh",
+      params: {
+        ph: Math.floor(Math.random() * 14),
+      },
+    });
   };
 
   if (photo)

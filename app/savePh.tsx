@@ -1,9 +1,9 @@
 import { AlertModal } from "@/components/AlertModal";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
+import { addMeasurement, Measurement } from "@/services/database";
 import { temp_storage } from "@/utils/temp_storage";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -63,22 +63,19 @@ const SavePh: React.FC = () => {
         to: newImageUri,
       });
 
-      const data = {
+      const data: Measurement = {
         title,
         user,
         location,
         description,
-        ph,
+        ph: Number(ph),
         date: new Date().toISOString(),
         phColor,
         phLevel,
         imageUri: newImageUri,
       };
 
-      const existing = await AsyncStorage.getItem("phRecords");
-      const records = existing ? JSON.parse(existing) : [];
-      records.push(data);
-      await AsyncStorage.setItem("phRecords", JSON.stringify(records));
+      await addMeasurement(data);
 
       setIsLoading(false);
       setIsModalVisible(true);

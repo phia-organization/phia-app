@@ -75,6 +75,18 @@ export const getAllMeasurements = async (): Promise<Measurement[]> => {
   }
 };
 
+export const getLastMeasurement = async (): Promise<Measurement | null> => {
+  try {
+    const row = await db.getFirstAsync<Measurement>(
+      "SELECT * FROM measurements ORDER BY date DESC"
+    );
+    return row;
+  } catch (error) {
+    console.error("Erro ao buscar medições:", error);
+    throw error;
+  }
+};
+
 export const deleteMeasurement = async (
   id: number
 ): Promise<SQLite.SQLiteExecuteAsyncResult<unknown>> => {

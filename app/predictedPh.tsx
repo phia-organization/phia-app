@@ -1,11 +1,9 @@
 import { ThemedText } from "@/components/ThemedText";
 import { Colors, pHValueColors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -40,52 +38,23 @@ export function getPhLevel(valor: number): {
 }
 
 export default function PredictedPh() {
-  const [predictedPh, setPredictedPh] = useState<number | null>(null);
+  const { ph } = useLocalSearchParams<{
+    ph: string;
+  }>();
+
+  const predictedPh = ph ? parseFloat(ph) : 0;
+  const phPercentage = (predictedPh / 14) * 100;
+
   const [phColor, setPhColor] = useState<string>(Colors.default.textSecondary);
   const [phLevel, setPhLevel] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const getPredictedPh = async () => {
-      try {
-        const phData = await AsyncStorage.getItem("ph_predictions");
-        if (phData !== null) {
-          const parsedPredictions = JSON.parse(phData);
-          const lastPrediction =
-            parsedPredictions[parsedPredictions.length - 1];
-
-          if (lastPrediction && lastPrediction.predicted_ph !== undefined) {
-            const phValue = lastPrediction.predicted_ph;
-            const { phLevel, phColor } = getPhLevel(phValue);
-            setPredictedPh(phValue);
-            setPhLevel(phLevel);
-            setPhColor(phColor);
-          }
-        }
-      } catch (e) {
-        console.error("Erro ao ler o valor de pH:", e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getPredictedPh();
-  }, []);
-
-  const phPercentage = predictedPh ? (predictedPh / 14) * 100 : 0;
-
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={Colors.default.accent} />
-        <ThemedText
-          style={{ color: Colors.default.textSecondary, marginTop: 16 }}
-        >
-          Analisando resultado...
-        </ThemedText>
-      </View>
-    );
-  }
+    if (predictedPh) {
+      const { phLevel, phColor } = getPhLevel(predictedPh);
+      setPhLevel(phLevel);
+      setPhColor(phColor);
+    }
+  }, [predictedPh]);
 
   return (
     <SafeAreaView style={styles.container}>

@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
@@ -13,13 +12,7 @@ import {
 
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
-
-type HistoryItem = {
-  title: string;
-  ph: number;
-  date: string;
-  phColor: string;
-};
+import { getLastMeasurement, Measurement } from "@/services/database";
 
 const InfoCard = ({
   icon,
@@ -43,23 +36,16 @@ const InfoCard = ({
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [lastMeasurement, setLastMeasurement] = useState<HistoryItem | null>(
+  const [lastMeasurement, setLastMeasurement] = useState<Measurement | null>(
     null
   );
 
   useFocusEffect(
     useCallback(() => {
       const fetchLastMeasurement = async () => {
-        const data = await AsyncStorage.getItem("phRecords");
+        const data = await getLastMeasurement();
         if (data) {
-          const records = JSON.parse(data);
-          if (records.length > 0) {
-            const sortedRecords = records.sort(
-              (a: any, b: any) =>
-                new Date(b.date).getTime() - new Date(a.date).getTime()
-            );
-            setLastMeasurement(sortedRecords[0]);
-          }
+          setLastMeasurement(data);
         }
       };
       fetchLastMeasurement();
@@ -128,9 +114,19 @@ export default function HomeScreen() {
                   {new Date(lastMeasurement.date).toLocaleDateString("pt-BR")}
                 </ThemedText>
               </View>
-              <ThemedText style={styles.recentCardPh}>
-                {parseFloat(lastMeasurement.ph.toString()).toFixed(1)}
-              </ThemedText>
+              <View style={styles.phValueContainer}>
+                <ThemedText style={styles.phValueText}>
+                  {Number(lastMeasurement.ph).toFixed(1)}
+                </ThemedText>
+                <ThemedText
+                  style={[
+                    styles.phLevelText,
+                    { color: lastMeasurement.phColor },
+                  ]}
+                >
+                  {lastMeasurement.phLevel}
+                </ThemedText>
+              </View>
             </View>
           ) : (
             <View style={styles.emptyRecentCard}>
@@ -257,13 +253,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  recentCardPh: {
-    fontFamily: "SpaceMono",
-    fontSize: 24,
-    color: Colors.default.accent,
-    fontWeight: "bold",
-    padding: 16,
-  },
   emptyRecentCard: {
     backgroundColor: Colors.default.card,
     borderRadius: 12,
@@ -291,5 +280,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: Colors.default.textSecondary,
+  },
+  phValueContainer: {
+    alignItems: "flex-end",
+    paddingRight: 18,
+  },
+  phValueText: {
+    fontFamily: "SpaceMono",
+    fontSize: 22,
+    color: Colors.default.accent,
+    fontWeight: "bold",
+  },
+  phLevelText: {
+    fontSize: 12,
+    fontWeight: "600",
   },
 });

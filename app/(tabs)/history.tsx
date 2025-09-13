@@ -2,9 +2,13 @@ import { AlertModal } from "@/components/AlertModal";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
+import {
+  deleteMeasurement,
+  getAllMeasurements,
+  Measurement,
+} from "@/services/database";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
@@ -15,14 +19,9 @@ import {
   View,
 } from "react-native";
 
-interface ItemDateToDelete {
-  date: string;
-  imageUri: string;
-}
-
 interface ModalState {
   visible: boolean;
-  itemDateToDelete: ItemDateToDelete | null;
+  itemToDelete: Measurement | null;
 }
 
 export default function History() {
@@ -30,31 +29,12 @@ export default function History() {
 
   const [modalState, setModalState] = useState<ModalState>({
     visible: false,
-    itemDateToDelete: null,
+    itemToDelete: null,
   });
 
-  const [items, setItems] = useState<
-    {
-      date: string;
-      title: string;
-      description: string;
-      location: string;
-      ph: number;
-      phColor: string;
-      phLevel: string;
-      user: string;
-      imageUri: string;
-    }[]
-  >([]);
+  const [items, setItems] = useState<Measurement[]>([]);
 
-  const sortRecords = (records: any[]) => {
-    return records.sort(
-      (a: any, b: any) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-  };
-
-  function goToDetails(item: any) {
+  function goToDetails(item: Measurement) {
     router.push({
       pathname: "/historyDetails",
       params: {
@@ -63,47 +43,42 @@ export default function History() {
     });
   }
 
-  const handleDeleteConfirm = async () => {
-    if (modalState.itemDateToDelete) {
-      await deleteItem(modalState.itemDateToDelete);
+  const fetchData = useCallback(async () => {
+    try {
+      const data = await getAllMeasurements();
+      setItems(data);
+    } catch (error) {
+      console.error("Erro ao buscar medições do banco de dados:", error);
     }
-    setModalState({ visible: false, itemDateToDelete: null });
+  }, []);
+
+  const handleDeleteConfirm = async () => {
+    if (modalState.itemToDelete) {
+      await deleteItem(modalState.itemToDelete);
+    }
+    setModalState({ visible: false, itemToDelete: null });
   };
 
-  async function deleteItem(itemToDelete: { date: string; imageUri: string }) {
-    const { date: dateToDelete, imageUri } = itemToDelete;
-
-    const data = await AsyncStorage.getItem("phRecords");
-    if (data) {
-      const parsedData = JSON.parse(data);
-      const filteredData = parsedData.filter(
-        (record: any) => record.date !== dateToDelete
-      );
-
-      await AsyncStorage.setItem("phRecords", JSON.stringify(filteredData));
-
-      setItems(sortRecords(filteredData));
-    }
+  async function deleteItem(itemToDelete: Measurement) {
+    if (!itemToDelete.id) return;
 
     try {
-      await FileSystem.deleteAsync(imageUri);
+      await deleteMeasurement(itemToDelete.id);
+
+      await FileSystem.deleteAsync(itemToDelete.imageUri);
+
+      setItems((prevItems) =>
+        prevItems.filter((item) => item.id !== itemToDelete.id)
+      );
     } catch (error) {
-      console.error("Erro ao deletar o arquivo de imagem:", error);
+      console.error("Erro ao deletar o registro:", error);
     }
   }
 
   useFocusEffect(
     useCallback(() => {
-      const fetchData = async () => {
-        const data = await AsyncStorage.getItem("phRecords");
-        if (data) {
-          const parsedData = JSON.parse(data);
-          setItems(sortRecords(parsedData));
-        }
-      };
-
       fetchData();
-    }, [])
+    }, [fetchData])
   );
 
   return (
@@ -135,9 +110,9 @@ export default function History() {
             </ThemedText>
           </View>
         ) : (
-          items.map((item, idx) => (
+          items.map((item) => (
             <TouchableOpacity
-              key={idx}
+              key={item.id}
               onPress={() => goToDetails(item)}
               style={styles.card}
             >
@@ -196,10 +171,7 @@ export default function History() {
                 onPress={() =>
                   setModalState({
                     visible: true,
-                    itemDateToDelete: {
-                      date: item.date,
-                      imageUri: item.imageUri,
-                    },
+                    itemToDelete: item,
                   })
                 }
                 style={styles.deleteButton}
@@ -216,14 +188,14 @@ export default function History() {
       </ScrollView>
       <AlertModal
         visible={modalState.visible}
-        type="error"
+        type="delete"
         title="Confirmar Exclusão"
         message="Esta ação é permanente. Tem certeza que deseja excluir este registro?"
         actions={[
           {
             text: "Cancelar",
             onPress: () =>
-              setModalState({ visible: false, itemDateToDelete: null }),
+              setModalState({ visible: false, itemToDelete: null }),
             style: "secondary",
           },
           {

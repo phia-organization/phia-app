@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "./ThemedText";
 
-type AlertType = "success" | "error" | "warning" | "info";
+type AlertType = "success" | "error" | "warning" | "info" | "delete";
 
 interface ActionButton {
   text: string;
@@ -36,6 +36,8 @@ export const AlertModal = ({
         };
       case "error":
         return { icon: "close-circle" as const, color: Colors.default.error };
+      case "delete":
+        return { icon: "trash" as const, color: Colors.default.error };
       case "warning":
         return { icon: "warning" as const, color: Colors.default.warning };
       case "info":
