@@ -4,7 +4,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { deleteAsync } from "expo-file-system";
+import * as FileSystem from "expo-file-system";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
@@ -86,7 +86,7 @@ export default function History() {
     }
 
     try {
-      await deleteAsync(imageUri);
+      await FileSystem.deleteAsync(imageUri);
     } catch (error) {
       console.error("Erro ao deletar o arquivo de imagem:", error);
     }
