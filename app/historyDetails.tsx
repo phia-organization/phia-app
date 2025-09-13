@@ -1,6 +1,6 @@
 import { exportMeasurements } from "@/services/backupService";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -11,6 +11,7 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 
@@ -30,6 +31,8 @@ export default function HistoryDetails() {
   const { item } = useLocalSearchParams();
   const router = useRouter();
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const parsedItem: HistoryItem | null = useMemo(() => {
     try {
       if (!item) return null;
@@ -41,9 +44,16 @@ export default function HistoryDetails() {
     }
   }, [item]);
 
-  const handleExportOne = () => {
+  const handleExportOne = async () => {
     if (parsedItem) {
-      exportMeasurements([parsedItem]);
+      setIsLoading(true);
+      try {
+        await exportMeasurements([parsedItem]);
+      } catch (error) {
+        console.error("A exportação falhou na tela de Detalhes:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -193,6 +203,7 @@ export default function HistoryDetails() {
           />
         </View>
       </ScrollView>
+      <LoadingOverlay visible={isLoading} text={"Exportando Coleta..."} />
     </View>
   );
 }

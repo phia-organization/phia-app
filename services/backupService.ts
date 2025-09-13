@@ -67,13 +67,8 @@ export const importMeasurements = async () => {
 
       await addMeasurement(newMeasurement);
     }
-
-    alert("Dados importados com sucesso! A lista será atualizada.");
   } catch (error) {
     console.error("Erro ao importar dados:", error);
-    alert(
-      "Ocorreu um erro ao importar o backup. Verifique se o arquivo é válido."
-    );
   }
 };
 

@@ -1,4 +1,5 @@
 import { AlertModal } from "@/components/AlertModal";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
@@ -31,11 +32,16 @@ interface ModalState {
 export default function History() {
   const router = useRouter();
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState("Carregando...");
+  const [isSuccessImportData, setIsSuccessImportData] = useState({
+    success: false,
+    view: false,
+  });
   const [modalState, setModalState] = useState<ModalState>({
     visible: false,
     itemToDelete: null,
   });
-
   const [items, setItems] = useState<Measurement[]>([]);
 
   function goToDetails(item: Measurement) {
@@ -86,12 +92,36 @@ export default function History() {
   );
 
   const handleImport = async () => {
-    await importMeasurements();
-    fetchData();
+    setLoadingText("Importando Dados...");
+    setIsLoading(true);
+    try {
+      await importMeasurements();
+      fetchData();
+      setIsSuccessImportData({
+        success: true,
+        view: true,
+      });
+    } catch (error) {
+      console.error("A importação falhou na tela de Histórico:", error);
+      setIsSuccessImportData({
+        success: false,
+        view: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleExportAll = () => {
-    exportMeasurements(items);
+  const handleExportAll = async () => {
+    setLoadingText("Exportando Dados...");
+    setIsLoading(true);
+    try {
+      await exportMeasurements(items);
+    } catch (error) {
+      console.error("A exportação falhou na tela de Histórico:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -239,6 +269,29 @@ export default function History() {
           },
         ]}
       />
+      <AlertModal
+        visible={isSuccessImportData.view}
+        type={isSuccessImportData.success ? "success" : "error"}
+        title={isSuccessImportData.success ? "Sucesso!" : "Erro!"}
+        message={
+          isSuccessImportData.success
+            ? "Seus dados foram importados com sucesso."
+            : "Ocorreu um erro inesperado ao importar seus dados."
+        }
+        actions={[
+          {
+            text: "Ver coletas",
+            onPress: () => {
+              setIsSuccessImportData({
+                ...isSuccessImportData,
+                view: false,
+              });
+            },
+            style: "primary",
+          },
+        ]}
+      />
+      <LoadingOverlay visible={isLoading} text={loadingText} />
     </ThemedView>
   );
 }
