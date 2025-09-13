@@ -3,6 +3,10 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import {
+  exportMeasurements,
+  importMeasurements,
+} from "@/services/backupService";
+import {
   deleteMeasurement,
   getAllMeasurements,
   Measurement,
@@ -81,13 +85,43 @@ export default function History() {
     }, [fetchData])
   );
 
+  const handleImport = async () => {
+    await importMeasurements();
+    fetchData();
+  };
+
+  const handleExportAll = () => {
+    exportMeasurements(items);
+  };
+
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
-        <ThemedText type="title">Histórico de Medições</ThemedText>
-        <ThemedText style={{ color: Colors.default.textSecondary }}>
-          Seus registros salvos
-        </ThemedText>
+        <View>
+          <ThemedText type="title">Histórico de Medições</ThemedText>
+          <ThemedText style={{ color: Colors.default.textSecondary }}>
+            Seus registros salvos
+          </ThemedText>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={handleImport} style={styles.actionButton}>
+            <Ionicons
+              name="cloud-upload-outline"
+              size={24}
+              color={Colors.default.accent}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleExportAll}
+            style={styles.actionButton}
+          >
+            <Ionicons
+              name="download-outline"
+              size={24}
+              color={Colors.default.accent}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.listContainer}>
@@ -219,6 +253,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 16,
     backgroundColor: Colors.default.primary,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  headerActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  actionButton: {
+    padding: 8,
   },
   listContainer: {
     paddingHorizontal: 16,

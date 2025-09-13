@@ -1,3 +1,4 @@
+import { exportMeasurements } from "@/services/backupService";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo } from "react";
 import {
@@ -39,6 +40,12 @@ export default function HistoryDetails() {
       return null;
     }
   }, [item]);
+
+  const handleExportOne = () => {
+    if (parsedItem) {
+      exportMeasurements([parsedItem]);
+    }
+  };
 
   if (!parsedItem) {
     return (
@@ -84,8 +91,15 @@ export default function HistoryDetails() {
           style={styles.headerTitle}
           numberOfLines={1}
         >
-          {"Detalhes da Medição"}
+          {parsedItem.title || "Detalhes da Medição"}
         </ThemedText>
+        <TouchableOpacity onPress={handleExportOne} style={styles.exportButton}>
+          <Ionicons
+            name="download-outline"
+            size={24}
+            color={Colors.default.accent}
+          />
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
@@ -196,13 +210,17 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: Colors.default.primary,
   },
-  backButton: {
-    padding: 4,
-    marginRight: 12,
-  },
   headerTitle: {
     fontSize: 20,
     flex: 1,
+    marginHorizontal: 8,
+  },
+  exportButton: {
+    padding: 8,
+  },
+  backButton: {
+    padding: 4,
+    marginRight: 12,
   },
   contentContainer: {
     padding: 16,
