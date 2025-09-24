@@ -16,7 +16,12 @@
         "foregroundImage": "./assets/images/adaptive-phia-icon.png",
         "backgroundColor": "#0B1525"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.santosvic.phiaapp"
     },
     "web": {
       "bundler": "metro",
@@ -28,7 +33,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash.png",
+          "image": "./assets/images/favicon.png",
           "resizeMode": "contain",
           "backgroundColor": "#0B1525"
         }
@@ -47,6 +52,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7e4d5cb4-a3b4-4751-b804-83b855b78bad"
+      }
     }
   }
 }
