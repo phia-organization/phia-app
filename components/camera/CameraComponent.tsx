@@ -5,6 +5,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { AlertModal } from "../AlertModal";
 import PhotoPreviewSection from "./CameraPreviewPhoto";
 
 export default function CameraComponent({
@@ -20,6 +21,11 @@ export default function CameraComponent({
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView | null>(null);
   const [checkedPermission, setCheckedPermission] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorModal, setErrorModal] = useState({
+    visible: false,
+    message: "",
+  });
 
   useEffect(() => {
     (async () => {
@@ -33,14 +39,8 @@ export default function CameraComponent({
 
   const handleTakePhoto = async () => {
     if (cameraRef.current) {
-      const options = {
-        quality: 1,
-        base64: true,
-        exif: false,
-      };
-
+      const options = { quality: 1, base64: true, exif: false };
       const takedPhoto = await cameraRef.current.takePictureAsync(options);
-
       setPhoto(takedPhoto);
     }
   };
@@ -67,33 +67,80 @@ export default function CameraComponent({
   const handleSavePhoto = async () => {
     if (!photo) return;
 
-    /* await storeNewPrediction({
-      predicted_ph: Math.floor(Math.random() * 14),
-      rgbs: {
-        q1: { r: 255, g: 0, b: 0 },
-        q2: { r: 0, g: 255, b: 0 },
-        q3: { r: 0, g: 0, b: 255 },
-        q4: { r: 255, g: 255, b: 0 },
-      },
-    } as Prediction); */
+    setIsLoading(true);
 
-    temp_storage.captured_photo = photo;
+    const formData = new FormData();
+    formData.append("file", {
+      uri: photo.uri,
+      name: `photo_${Date.now()}.jpg`,
+      type: "image/jpeg",
+    } as any);
 
-    router.push({
-      pathname: "/predictedPh",
-      params: {
-        ph: Math.floor(Math.random() * 14),
-      },
-    });
+    try {
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+      if (!apiUrl) {
+        throw new Error("API_URL não foi definida no arquivo .env");
+      }
+
+      console.log(`Enviando para a API: ${apiUrl}/predict`);
+
+      const response = await fetch(`${apiUrl}/predict`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Erro da API:", response.status, errorText);
+        throw new Error(
+          "A API retornou um erro. Verifique os logs do console."
+        );
+      }
+
+      const data = await response.json();
+
+      temp_storage.captured_photo = photo;
+
+      router.push({
+        pathname: "/predictedPh",
+        params: { apiResponse: JSON.stringify(data) },
+      });
+    } catch (error) {
+      console.error("Erro ao enviar a foto:", error);
+      setErrorModal({
+        visible: true,
+        message: error instanceof Error ? error.message : "Erro desconhecido",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (photo)
     return (
-      <PhotoPreviewSection
-        photo={photo}
-        handleRetakePhoto={handleRetakePhoto}
-        handleSavePhoto={handleSavePhoto}
-      />
+      <>
+        <PhotoPreviewSection
+          photo={photo}
+          handleRetakePhoto={handleRetakePhoto}
+          handleSavePhoto={handleSavePhoto}
+          isLoading={isLoading}
+        />
+        <AlertModal
+          visible={errorModal.visible}
+          type="error"
+          title="Erro ao enviar a foto!"
+          message={errorModal.message}
+          actions={[
+            {
+              text: "OK",
+              onPress: () => {
+                setErrorModal({ visible: false, message: "" });
+              },
+              style: "destructive",
+            },
+          ]}
+        />
+      </>
     );
 
   return (

@@ -116,7 +116,7 @@ export default function HomeScreen() {
               </View>
               <View style={styles.phValueContainer}>
                 <ThemedText style={styles.phValueText}>
-                  {Number(lastMeasurement.ph).toFixed(1)}
+                  {lastMeasurement.phInterval}
                 </ThemedText>
                 <ThemedText
                   style={[

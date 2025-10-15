@@ -6,7 +6,7 @@ export interface Measurement {
   user: string;
   location: string;
   description: string;
-  ph: number;
+  phInterval: string;
   date: string;
   phColor: string;
   phLevel: string;
@@ -24,7 +24,7 @@ export const initDB = async () => {
         user TEXT NOT NULL,
         location TEXT NOT NULL,
         description TEXT,
-        ph REAL NOT NULL,
+        phInterval TEXT NOT NULL,
         date TEXT NOT NULL,
         phColor TEXT NOT NULL,
         phLevel TEXT NOT NULL,
@@ -43,14 +43,14 @@ export const addMeasurement = async (
 ): Promise<SQLite.SQLiteExecuteAsyncResult<unknown>> => {
   try {
     const statement = await db.prepareAsync(
-      "INSERT INTO measurements (title, user, location, description, ph, date, phColor, phLevel, imageUri) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO measurements (title, user, location, description, phInterval, date, phColor, phLevel, imageUri) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     const result = await statement.executeAsync(
       measurement.title,
       measurement.user,
       measurement.location,
       measurement.description,
-      measurement.ph,
+      measurement.phInterval,
       measurement.date,
       measurement.phColor,
       measurement.phLevel,

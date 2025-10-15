@@ -2,7 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { Colors, pHValueColors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import {
   SafeAreaView,
   StyleSheet,
@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
 
-export function getPhLevel(valor: number): {
+/* export function getPhLevel(valor: number): {
   phLevel: string;
   phColor: string;
 } {
@@ -36,25 +36,102 @@ export function getPhLevel(valor: number): {
     return { phLevel: "Base Forte", phColor: pHValueColors["Base Forte"] };
   return { phLevel: "Indefinido", phColor: Colors.default.textSecondary };
 }
+ */
+
+export function getPhLevelFromInterval(interval: string): {
+  phLevel: string;
+  phColor: string;
+} {
+  const phIntervalMap: { [key: string]: { phLevel: string; phColor: string } } =
+    {
+      "2.50 - 4.00": {
+        phLevel: "Ácido Moderado",
+        phColor: pHValueColors["Ácido Moderado"],
+      },
+      "4.00 - 5.50": {
+        phLevel: "Ácido Moderado",
+        phColor: pHValueColors["Ácido Moderado"],
+      },
+      "5.50 - 7.00": {
+        phLevel: "Ácido Leve",
+        phColor: pHValueColors["Ácido Leve"],
+      },
+      "7.00 - 8.50": {
+        phLevel: "Base Leve",
+        phColor: pHValueColors["Base Leve"],
+      },
+      "8.50 - 10.00": {
+        phLevel: "Base Moderada",
+        phColor: pHValueColors["Base Moderada"],
+      },
+      "10.00 - 11.50": {
+        phLevel: "Base Moderada",
+        phColor: pHValueColors["Base Moderada"],
+      },
+      "11.50 - 13.00": {
+        phLevel: "Base Forte",
+        phColor: pHValueColors["Base Forte"],
+      },
+    };
+
+  return (
+    phIntervalMap[interval] || {
+      phLevel: "Indefinido",
+      phColor: Colors.default.textSecondary,
+    }
+  );
+}
 
 export default function PredictedPh() {
-  const { ph } = useLocalSearchParams<{
-    ph: string;
-  }>();
+  const params = useLocalSearchParams<{ apiResponse: string }>();
 
-  const predictedPh = ph ? parseFloat(ph) : 0;
-  const phPercentage = (predictedPh / 14) * 100;
+  const analysisData = useMemo(() => {
+    try {
+      if (!params.apiResponse) return null;
+      const response = JSON.parse(params.apiResponse);
+      const phInterval = response.predicted_ph_interval;
 
-  const [phColor, setPhColor] = useState<string>(Colors.default.textSecondary);
-  const [phLevel, setPhLevel] = useState<string>("");
+      const { phLevel, phColor } = getPhLevelFromInterval(phInterval);
 
-  useEffect(() => {
-    if (predictedPh) {
-      const { phLevel, phColor } = getPhLevel(predictedPh);
-      setPhLevel(phLevel);
-      setPhColor(phColor);
+      const [start, end] = phInterval.split(" - ").map(parseFloat);
+      const midpointValue = (start + end) / 2;
+      const phPercentage = (midpointValue / 14) * 100;
+
+      return {
+        phInterval,
+        phLevel,
+        phColor,
+        phPercentage,
+        rgbs: response.rgbs,
+      };
+    } catch (error) {
+      console.error("Falha ao analisar os dados da análise:", error);
+      return null;
     }
-  }, [predictedPh]);
+  }, [params.apiResponse]);
+
+  if (!analysisData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color={Colors.default.text} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.content}>
+          <ThemedText type="title">Erro na Análise</ThemedText>
+          <ThemedText style={{ marginTop: 16 }}>
+            Não foi possível carregar os resultados. Por favor, tente novamente.
+          </ThemedText>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const { phInterval, phLevel, phColor, phPercentage } = analysisData;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -71,8 +148,6 @@ export default function PredictedPh() {
       </View>
 
       <View style={styles.content}>
-        <ThemedText type="title">Resultado da Análise</ThemedText>
-
         <AnimatedCircularProgress
           size={220}
           width={15}
@@ -86,7 +161,7 @@ export default function PredictedPh() {
         >
           {() => (
             <Text style={[styles.phValueText, { color: phColor }]}>
-              {predictedPh?.toFixed(1)}
+              {phInterval}
             </Text>
           )}
         </AnimatedCircularProgress>
@@ -118,7 +193,7 @@ export default function PredictedPh() {
             router.push({
               pathname: "/savePh",
               params: {
-                ph: predictedPh?.toString(),
+                phInterval,
                 phColor,
                 phLevel,
               },
@@ -165,7 +240,7 @@ const styles = StyleSheet.create({
   },
   phValueText: {
     fontFamily: "SpaceMono",
-    fontSize: 52,
+    fontSize: 30,
     fontWeight: "bold",
   },
   levelContainer: {

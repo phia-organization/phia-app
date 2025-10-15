@@ -10,7 +10,7 @@ import * as Sharing from "expo-sharing";
 import JSZip from "jszip";
 import { addMeasurement, Measurement } from "./database";
 
-export const importMeasurements = async () => {
+/* export const importMeasurements = async () => {
   try {
     const result = await DocumentPicker.getDocumentAsync({
       type: "application/zip",
@@ -69,6 +69,74 @@ export const importMeasurements = async () => {
     }
   } catch (error) {
     console.error("Erro ao importar dados:", error);
+  }
+}; */
+
+export const importMeasurements = async () => {
+  try {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: "application/zip",
+      copyToCacheDirectory: true,
+    });
+
+    if (result.canceled || !result.assets) {
+      console.log("Importação cancelada pelo usuário.");
+      return;
+    }
+
+    const zipFileUri = result.assets[0].uri;
+    const zipBase64 = await readAsStringAsync(zipFileUri, {
+      encoding: EncodingType.Base64,
+    });
+    const zip = await JSZip.loadAsync(zipBase64, { base64: true });
+
+    const metadataFile = zip.file("records.json");
+    if (!metadataFile) {
+      throw new Error(
+        "Arquivo de backup inválido: records.json não encontrado."
+      );
+    }
+    const metadataJson = await metadataFile.async("string");
+    const recordsToImport = JSON.parse(metadataJson) as Measurement[];
+
+    for (const record of recordsToImport) {
+      if (!record.phInterval) {
+        console.warn(
+          "Registro ignorado: formato de backup antigo sem 'phInterval'.",
+          record
+        );
+        continue;
+      }
+
+      const oldImageName = record.imageUri.split("/").pop();
+      if (!oldImageName) continue;
+
+      const imageFile = zip.file(oldImageName);
+      if (!imageFile) {
+        console.warn(
+          `Imagem ${oldImageName} não encontrada no backup. Pulando.`
+        );
+        continue;
+      }
+
+      const imageBase64 = await imageFile.async("base64");
+      const newFileName = `phia_image_${Date.now()}_${oldImageName}`;
+      const newPermanentUri = documentDirectory + newFileName;
+      await writeAsStringAsync(newPermanentUri, imageBase64, {
+        encoding: EncodingType.Base64,
+      });
+
+      const newMeasurement: Measurement = {
+        ...record,
+        id: undefined,
+        imageUri: newPermanentUri,
+      };
+
+      await addMeasurement(newMeasurement);
+    }
+  } catch (error) {
+    console.error("Erro ao importar dados:", error);
+    throw error;
   }
 };
 

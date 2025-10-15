@@ -14,18 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
-
-type HistoryItem = {
-  date: string;
-  ph: number;
-  phLevel: string;
-  phColor: string;
-  title: string;
-  description: string;
-  location: string;
-  user: string;
-  imageUri: string;
-};
+import { Measurement } from "@/services/database";
 
 export default function HistoryDetails() {
   const { item } = useLocalSearchParams();
@@ -33,7 +22,7 @@ export default function HistoryDetails() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const parsedItem: HistoryItem | null = useMemo(() => {
+  const parsedItem: Measurement | null = useMemo(() => {
     try {
       if (!item) return null;
       const itemStr = Array.isArray(item) ? item[0] : item;
@@ -132,7 +121,7 @@ export default function HistoryDetails() {
               Valor do pH
             </ThemedText>
             <ThemedText style={{ ...styles.resultsValue, textAlign: "center" }}>
-              {Number(parsedItem.ph).toFixed(1)}
+              {parsedItem.phInterval}
             </ThemedText>
           </View>
           <View
@@ -252,7 +241,7 @@ const styles = StyleSheet.create({
   },
   resultsValue: {
     fontFamily: "SpaceMono",
-    fontSize: 56,
+    fontSize: 40,
     color: Colors.default.accent,
     fontWeight: "bold",
   },

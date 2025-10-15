@@ -11,15 +11,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 
 const PhotoPreviewSection = ({
   photo,
   handleRetakePhoto,
   handleSavePhoto,
+  isLoading = false,
 }: {
   photo: CameraCapturedPicture;
   handleRetakePhoto: () => void;
   handleSavePhoto?: () => void;
+  isLoading?: boolean;
 }) => (
   <SafeAreaView style={styles.container}>
     <View style={styles.header}>
@@ -47,12 +50,18 @@ const PhotoPreviewSection = ({
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.confirmButton} onPress={handleSavePhoto}>
-        <Ionicons
-          name="checkmark-circle-outline"
-          size={24}
-          color={Colors.default.primary}
-        />
-        <Text style={styles.confirmButtonText}>Confirmar</Text>
+        {isLoading ? (
+          <ActivityIndicator size="small" color={Colors.default.primary} />
+        ) : (
+          <>
+            <Ionicons
+              name="checkmark-circle-outline"
+              size={24}
+              color={Colors.default.primary}
+            />
+            <Text style={styles.confirmButtonText}>Confirmar</Text>
+          </>
+        )}
       </TouchableOpacity>
     </View>
   </SafeAreaView>

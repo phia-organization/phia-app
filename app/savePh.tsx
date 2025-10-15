@@ -22,8 +22,8 @@ import {
 } from "react-native";
 
 const SavePh: React.FC = () => {
-  const { ph, phColor, phLevel } = useLocalSearchParams<{
-    ph: string;
+  const { phInterval, phColor, phLevel } = useLocalSearchParams<{
+    phInterval: string;
     phColor: string;
     phLevel: string;
   }>();
@@ -48,14 +48,14 @@ const SavePh: React.FC = () => {
       Alert.alert("Erro", "Nenhuma imagem encontrada para salvar.");
       return;
     }
-    if (!ph) {
-      Alert.alert("Erro", "Valor de pH não foi encontrado.");
+    if (!phInterval) {
+      Alert.alert("Erro", "Intervalo de pH não foi encontrado.");
       return;
     }
 
     setIsLoading(true);
     const fileName = `phia_image_${Date.now()}.jpg`;
-    const newImageUri = FileSystem.documentDirectory + "/" + fileName;
+    const newImageUri = FileSystem.documentDirectory + fileName;
 
     try {
       await FileSystem.moveAsync({
@@ -68,7 +68,7 @@ const SavePh: React.FC = () => {
         user,
         location,
         description,
-        ph: Number(ph),
+        phInterval: phInterval,
         date: new Date().toISOString(),
         phColor,
         phLevel,
@@ -148,7 +148,7 @@ const SavePh: React.FC = () => {
 
               <View style={styles.resultTextContainer}>
                 <Text style={[styles.resultValue, { color: phColor }]}>
-                  {parseFloat(ph!).toFixed(1)}
+                  {phInterval}
                 </Text>
                 <ThemedText style={styles.resultLevel}>{phLevel}</ThemedText>
               </View>
