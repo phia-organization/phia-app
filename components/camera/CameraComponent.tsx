@@ -8,6 +8,9 @@ import { StyleSheet, View } from "react-native";
 import { AlertModal } from "../AlertModal";
 import PhotoPreviewSection from "./CameraPreviewPhoto";
 
+const DOMAINS_URL =
+  "https://raw.githubusercontent.com/phia-organization/phia-backend/refs/heads/main/domains.json";
+
 export default function CameraComponent({
   photo,
   setPhoto,
@@ -66,24 +69,32 @@ export default function CameraComponent({
 
   const handleSavePhoto = async () => {
     if (!photo) return;
-
     setIsLoading(true);
 
-    const formData = new FormData();
-    formData.append("file", {
-      uri: photo.uri,
-      name: `photo_${Date.now()}.jpg`,
-      type: "image/jpeg",
-    } as any);
+    let apiUrl = "";
 
     try {
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-      if (!apiUrl) {
-        throw new Error("API_URL não foi definida no arquivo .env");
+      console.log("Buscando URL do servidor...");
+      const domainsResponse = await fetch(DOMAINS_URL);
+      if (!domainsResponse.ok) {
+        throw new Error("Não foi possível obter a URL do servidor.");
       }
+      const domainsData = await domainsResponse.json();
+      apiUrl = domainsData.ngrok;
 
-      console.log(`Enviando para a API: ${apiUrl}/predict`);
+      if (!apiUrl) {
+        throw new Error("URL do Ngrok não encontrada no arquivo de domínios.");
+      }
+      console.log(`Servidor encontrada em: ${apiUrl}`);
 
+      const formData = new FormData();
+      formData.append("file", {
+        uri: photo.uri,
+        name: `photo_${Date.now()}.jpg`,
+        type: "image/jpeg",
+      } as any);
+
+      console.log(`Enviando para o servidor: ${apiUrl}/predict`);
       const response = await fetch(`${apiUrl}/predict`, {
         method: "POST",
         body: formData,
@@ -91,26 +102,55 @@ export default function CameraComponent({
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Erro da API:", response.status, errorText);
-        throw new Error(
-          "A API retornou um erro. Verifique os logs do console."
-        );
+        console.log("Erro do servidor (/predict):", response.status, errorText);
+        throw new Error("O servidor retornou um erro ao processar a imagem.");
       }
 
       const data = await response.json();
-
       temp_storage.captured_photo = photo;
 
       router.push({
         pathname: "/predictedPh",
         params: { apiResponse: JSON.stringify(data) },
       });
-    } catch (error) {
-      console.error("Erro ao enviar a foto:", error);
-      setErrorModal({
-        visible: true,
-        message: error instanceof Error ? error.message : "Erro desconhecido",
-      });
+    } catch (predictError) {
+      console.log("Erro no processo de envio:", predictError);
+
+      if (apiUrl) {
+        try {
+          console.log(`Executando health check em: ${apiUrl}/health-check`);
+          const healthResponse = await fetch(`${apiUrl}/health-check`);
+
+          if (healthResponse.ok) {
+            setErrorModal({
+              visible: true,
+              message:
+                "O servidor está online, mas houve um erro ao processar sua imagem. Tente uma foto mais nítida ou com melhor iluminação.",
+            });
+          } else {
+            setErrorModal({
+              visible: true,
+              message:
+                "Não foi possível conectar à API. O servidor pode estar offline ou instável.",
+            });
+          }
+        } catch (healthCheckError) {
+          console.log("Erro no health check:", healthCheckError);
+          setErrorModal({
+            visible: true,
+            message:
+              "Falha de conexão com o servidor. Verifique sua internet ou o status do servidor.",
+          });
+        }
+      } else {
+        setErrorModal({
+          visible: true,
+          message:
+            predictError instanceof Error
+              ? predictError.message
+              : "Erro desconhecido ao buscar a configuração do servidor.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
