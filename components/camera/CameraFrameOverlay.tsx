@@ -1,22 +1,25 @@
-import { useCameraPermissions } from "expo-camera";
-import React, { useEffect } from "react";
+import { useCameraPermissions } from 'expo-camera';
+import * as Linking from 'expo-linking';
+import React, { useEffect } from 'react';
 import {
+  AppState,
   Dimensions,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
+} from 'react-native';
 
-import { Colors } from "@/constants/Colors";
-import { Ionicons } from "@expo/vector-icons";
+import { Colors } from '@/constants/Colors';
+import { useIsFocused } from '@react-navigation/native';
 
-const STRIP_WIDTH = 70;
-const STRIP_HEIGHT = 300;
+const STRIP_WIDTH = 105;
+const STRIP_HEIGHT = 450;
 const BORDER_CORNER_SIZE = 40;
 const BORDER_THICKNESS = 3;
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const CENTER_WIDTH = STRIP_WIDTH + BORDER_CORNER_SIZE;
 const CENTER_HEIGHT = STRIP_HEIGHT + BORDER_CORNER_SIZE;
@@ -24,29 +27,30 @@ const CENTER_HEIGHT = STRIP_HEIGHT + BORDER_CORNER_SIZE;
 const SIDE_WIDTH = (SCREEN_WIDTH - CENTER_WIDTH) / 2;
 const VERTICAL_PADDING = (SCREEN_HEIGHT - CENTER_HEIGHT) / 2;
 
-export default function CameraFrameOverlay({
-  permissionAccepted,
-  setPermissionAccepted,
-}: {
-  permissionAccepted: boolean;
-  setPermissionAccepted: (value: boolean) => void;
-}) {
+export default function CameraFrameOverlay() {
   const [permission, requestPermission] = useCameraPermissions();
+  const isFocused = useIsFocused();
 
   useEffect(() => {
-    if (!permission) return;
-    if (permission.granted) {
-      setPermissionAccepted(true);
-    } else {
-      setPermissionAccepted(false);
+    if (isFocused) {
+      requestPermission();
     }
-  }, [permission, setPermissionAccepted]);
+  }, [isFocused]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && isFocused) {
+        requestPermission();
+      }
+    });
+    return () => subscription.remove();
+  }, [isFocused, requestPermission]);
 
   const renderCorner = (
-    position: "topLeft" | "topRight" | "bottomLeft" | "bottomRight"
+    position: 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight'
   ) => {
     const baseStyle = {
-      position: "absolute",
+      position: 'absolute',
       width: BORDER_CORNER_SIZE,
       height: BORDER_CORNER_SIZE,
       borderColor: Colors.default.accent,
@@ -86,48 +90,48 @@ export default function CameraFrameOverlay({
 
     return <View style={[baseStyle, stylesMap[position]]} />;
   };
-
+  if (!isFocused) return null;
   return (
     <View style={styles.overlayContainer}>
       <View style={[styles.dimmedHorizontal, { height: VERTICAL_PADDING }]} />
       <View style={styles.row}>
         <View style={[styles.dimmedVertical, { width: SIDE_WIDTH }]} />
         <View style={styles.centerContainer}>
-          {permissionAccepted ? (
+          {permission?.status === 'granted' ? (
             <>
               <Text style={styles.instructionText}>
                 Enquadre a fita de pH na área demarcada
               </Text>
               <View style={styles.bordersContainer} pointerEvents="none">
-                {renderCorner("topLeft")}
-                {renderCorner("topRight")}
-                {renderCorner("bottomLeft")}
-                {renderCorner("bottomRight")}
+                {renderCorner('topLeft')}
+                {renderCorner('topRight')}
+                {renderCorner('bottomLeft')}
+                {renderCorner('bottomRight')}
               </View>
             </>
-          ) : (
+          ) : permission?.status === 'denied' ? (
             <View style={styles.permissionDeniedContainer}>
-              {/* O ícone aqui estava 'camera-reverse', mudei para 'camera-off-outline' que parece mais apropriado */}
-              <Ionicons
-                name="camera-reverse"
-                size={48}
-                color={Colors.default.error}
-              />
               <Text style={styles.permissionDeniedText}>
-                O uso da câmera não está autorizado. Por favor, habilite a
-                permissão nas configurações do dispositivo.
+                Permita o acesso à câmera para usar este recurso.
               </Text>
-              {permission && !permission.granted && (
-                <TouchableOpacity
-                  onPress={requestPermission}
-                  style={styles.requestPermissionButton}
-                >
-                  <Text style={styles.requestPermissionButtonText}>
-                    Conceder Permissão
-                  </Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                onPress={() => {
+                  if (Platform.OS === 'android') {
+                    Linking.openSettings();
+                  } else {
+                    Linking.openURL('app-settings:');
+                  }
+                }}
+                style={styles.requestPermissionButton}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.permissionDeniedText}>
+                  Habilitar Câmera
+                </Text>
+              </TouchableOpacity>
             </View>
+          ) : (
+            <View />
           )}
         </View>
         <View style={[styles.dimmedVertical, { width: SIDE_WIDTH }]} />
@@ -140,64 +144,62 @@ export default function CameraFrameOverlay({
 const styles = StyleSheet.create({
   overlayContainer: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     zIndex: 2,
-    pointerEvents: "none",
+    pointerEvents: 'auto',
   },
   row: {
-    flexDirection: "row",
-    width: "100%",
+    flexDirection: 'row',
+    width: '100%',
     height: CENTER_HEIGHT,
   },
   dimmedHorizontal: {
-    width: "100%",
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    width: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   dimmedVertical: {
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     height: CENTER_HEIGHT,
   },
   centerContainer: {
     width: CENTER_WIDTH,
     height: CENTER_HEIGHT,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "transparent",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   bordersContainer: {
-    position: "absolute",
+    position: 'absolute',
     width: CENTER_WIDTH,
     height: CENTER_HEIGHT,
     zIndex: 10,
     elevation: 10,
   },
   instructionText: {
-    position: "absolute",
-    width: Dimensions.get("window").width,
-    top: -VERTICAL_PADDING / 3 + 40,
-    textAlign: "center",
+    position: 'absolute',
+    width: Dimensions.get('window').width,
+    top: -VERTICAL_PADDING / 3 + 18,
+    textAlign: 'center',
     fontSize: 16,
     color: Colors.default.text,
-    fontWeight: "600",
-    pointerEvents: "auto",
+    fontWeight: '600',
+    pointerEvents: 'auto',
     paddingHorizontal: 20,
   },
   permissionDeniedContainer: {
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    borderRadius: 12,
-    marginHorizontal: SIDE_WIDTH / 2,
-    gap: 10,
-    pointerEvents: "auto",
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 300,
+    zIndex: 10,
+    gap: 5,
   },
   permissionDeniedText: {
-    color: Colors.default.error,
-    textAlign: "center",
+    color: '#fff',
+    textAlign: 'center',
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   requestPermissionButton: {
     backgroundColor: Colors.default.accent,
@@ -205,10 +207,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     borderRadius: 8,
     marginTop: 10,
+    zIndex: 10,
   },
   requestPermissionButtonText: {
-    color: Colors.default.primary,
+    color: '#fff',
     fontSize: 14,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
 });
