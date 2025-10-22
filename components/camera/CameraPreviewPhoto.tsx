@@ -4,8 +4,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { CameraCapturedPicture } from "expo-camera";
 import React from "react";
 import {
+  Dimensions,
   Image,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -24,59 +26,71 @@ const PhotoPreviewSection = ({
   handleSavePhoto?: () => void;
   isLoading?: boolean;
 }) => (
-  <SafeAreaView style={styles.container}>
-    <View style={styles.header}>
-      <ThemedText type="subtitle" style={{ textAlign: "center" }}>
-        Verifique a foto
-      </ThemedText>
-      <ThemedText
-        style={{ color: Colors.default.textSecondary, textAlign: "center" }}
-      >
-        A imagem está nítida e bem iluminada?
-      </ThemedText>
-    </View>
+  <SafeAreaView style={styles.safeArea}>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.header}>
+        <ThemedText type="subtitle" style={{ textAlign: "center" }}>
+          Verifique a foto
+        </ThemedText>
+        <ThemedText
+          style={{ color: Colors.default.textSecondary, textAlign: "center" }}
+        >
+          A imagem está nítida e bem iluminada?
+        </ThemedText>
+      </View>
 
-    <View style={styles.imageContainer}>
-      <Image
-        style={styles.previewImage}
-        source={{ uri: "data:image/jpg;base64," + photo.base64 }}
-      />
-    </View>
+      <View style={styles.imageContainer}>
+        <Image
+          style={styles.previewImage}
+          source={{ uri: "data:image/jpg;base64," + photo.base64 }}
+        />
+      </View>
 
-    <View style={styles.buttonContainer}>
-      <TouchableOpacity style={styles.retakeButton} onPress={handleRetakePhoto}>
-        <Ionicons name="close" size={24} color={Colors.default.tint} />
-        <Text style={styles.retakeButtonText}>Repetir</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.retakeButton}
+          onPress={handleRetakePhoto}
+        >
+          <Ionicons name="close" size={24} color={Colors.default.tint} />
+          <Text style={styles.retakeButtonText}>Repetir</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.confirmButton} onPress={handleSavePhoto}>
-        {isLoading ? (
-          <ActivityIndicator size="small" color={Colors.default.primary} />
-        ) : (
-          <>
-            <Ionicons
-              name="checkmark-circle-outline"
-              size={24}
-              color={Colors.default.primary}
-            />
-            <Text style={styles.confirmButtonText}>Confirmar</Text>
-          </>
-        )}
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={styles.confirmButton}
+          onPress={handleSavePhoto}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="small" color={Colors.default.primary} />
+          ) : (
+            <>
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={24}
+                color={Colors.default.primary}
+              />
+              <Text style={styles.confirmButtonText}>Confirmar</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   </SafeAreaView>
 );
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: Colors.default.background,
+    paddingBottom: Dimensions.get("window").height * 0.15,
+  },
+  scrollContainer: {
     justifyContent: "flex-start",
     paddingHorizontal: 16,
     paddingTop: 0,
+    paddingBottom: 20,
   },
   header: {
-    paddingTop: 24,
+    paddingTop: 20,
     width: "100%",
     gap: 4,
     marginBottom: 8,
@@ -85,10 +99,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
-    aspectRatio: 3 / 4,
+    aspectRatio: 4 / 5,
     borderRadius: 12,
     overflow: "hidden",
-    marginVertical: 16,
+    marginVertical: 12,
     backgroundColor: Colors.default.card,
   },
   previewImage: {

@@ -15,9 +15,11 @@ import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { Measurement } from "@/services/database";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function HistoryDetails() {
   const { item } = useLocalSearchParams();
+  const { top } = useSafeAreaInsets();
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -78,7 +80,14 @@ export default function HistoryDetails() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: top,
+          },
+        ]}
+      >
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backButton}
@@ -205,7 +214,6 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 60,
     paddingHorizontal: 16,
     paddingBottom: 16,
     backgroundColor: Colors.default.primary,

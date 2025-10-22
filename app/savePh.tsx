@@ -20,6 +20,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SavePh: React.FC = () => {
   const { phInterval, phColor, phLevel } = useLocalSearchParams<{
@@ -27,6 +28,8 @@ const SavePh: React.FC = () => {
     phColor: string;
     phLevel: string;
   }>();
+
+  const { top } = useSafeAreaInsets();
 
   const capturedPhoto = temp_storage.captured_photo;
   const imageUri = capturedPhoto?.uri;
@@ -99,7 +102,14 @@ const SavePh: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: top,
+          },
+        ]}
+      >
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backButton}
@@ -257,7 +267,6 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 60,
     paddingHorizontal: 16,
     paddingBottom: 16,
     backgroundColor: Colors.default.primary,

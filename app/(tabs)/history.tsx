@@ -23,6 +23,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface ModalState {
   visible: boolean;
@@ -31,6 +32,7 @@ interface ModalState {
 
 export default function History() {
   const router = useRouter();
+  const { top } = useSafeAreaInsets();
 
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Carregando...");
@@ -95,10 +97,10 @@ export default function History() {
     setLoadingText("Importando Dados...");
     setIsLoading(true);
     try {
-      await importMeasurements();
-      fetchData();
+      const importSuccess = await importMeasurements();
+      importSuccess && fetchData();
       setIsSuccessImportData({
-        success: true,
+        success: importSuccess,
         view: true,
       });
     } catch (error) {
@@ -126,7 +128,14 @@ export default function History() {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: top,
+          },
+        ]}
+      >
         <View>
           <ThemedText type="title">Histórico de Medições</ThemedText>
           <ThemedText style={{ color: Colors.default.textSecondary }}>
@@ -302,7 +311,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.default.background,
   },
   header: {
-    paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 16,
     backgroundColor: Colors.default.primary,

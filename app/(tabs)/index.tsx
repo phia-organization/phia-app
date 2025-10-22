@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ThemedText";
 import { Colors } from "@/constants/Colors";
@@ -39,6 +40,7 @@ export default function HomeScreen() {
   const [lastMeasurement, setLastMeasurement] = useState<Measurement | null>(
     null
   );
+  const { top } = useSafeAreaInsets();
 
   useFocusEffect(
     useCallback(() => {
@@ -54,7 +56,14 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: top,
+          },
+        ]}
+      >
         <Image
           source={require("@/assets/images/favicon.png")}
           style={styles.logo}
@@ -65,17 +74,7 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={{ marginBottom: 24, width: "100%" }}>
-          {/*  <Image
-            source={require("@/assets/images/hero.jpeg")}
-            style={{
-              width: "100%",
-              height: 250,
-              resizeMode: "cover",
-              borderRadius: 12,
-            }}
-          /> */}
-        </View>
+        <View style={{ marginBottom: 10, width: "100%" }}></View>
         <ThemedText style={styles.welcomeText}>
           A análise de pH na palma da sua mão.
         </ThemedText>
@@ -181,7 +180,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 60,
     paddingHorizontal: 16,
     paddingBottom: 16,
     backgroundColor: Colors.default.primary,
@@ -197,7 +195,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: 20,
-    paddingBottom: 120,
+    paddingBottom: 140,
   },
   welcomeText: {
     fontSize: 18,

@@ -4,11 +4,14 @@ import { Dimensions } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
 const { width } = Dimensions.get("window");
-const TAB_BAR_HEIGHT = 85;
 const BUTTON_WIDTH = 80;
 const NOTCH_WIDTH = 90;
 
-export default function TabBarBackground() {
+interface TabBarBackgroundProps {
+  height: number;
+}
+
+export default function TabBarBackground({ height }: TabBarBackgroundProps) {
   const d = `
     M 0 1 
     L ${(width - NOTCH_WIDTH) / 2} 1
@@ -19,15 +22,15 @@ export default function TabBarBackground() {
     (width + NOTCH_WIDTH) / 2
   } 1
     L ${width} 1
-    L ${width} ${TAB_BAR_HEIGHT}
-    L 0 ${TAB_BAR_HEIGHT}
+    L ${width} ${height}
+    L 0 ${height}
     Z
   `;
 
   return (
     <Svg
       width={width}
-      height={TAB_BAR_HEIGHT}
+      height={height}
       style={{
         position: "absolute",
         bottom: 0,

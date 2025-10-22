@@ -72,7 +72,7 @@ import { addMeasurement, Measurement } from "./database";
   }
 }; */
 
-export const importMeasurements = async () => {
+export const importMeasurements = async (): Promise<boolean> => {
   try {
     const result = await DocumentPicker.getDocumentAsync({
       type: "application/zip",
@@ -81,7 +81,7 @@ export const importMeasurements = async () => {
 
     if (result.canceled || !result.assets) {
       console.log("Importação cancelada pelo usuário.");
-      return;
+      return false;
     }
 
     const zipFileUri = result.assets[0].uri;
@@ -134,6 +134,7 @@ export const importMeasurements = async () => {
 
       await addMeasurement(newMeasurement);
     }
+    return true;
   } catch (error) {
     console.error("Erro ao importar dados:", error);
     throw error;

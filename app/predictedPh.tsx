@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 /* export function getPhLevel(valor: number): {
   phLevel: string;
@@ -84,6 +85,7 @@ export function getPhLevelFromInterval(interval: string): {
 
 export default function PredictedPh() {
   const params = useLocalSearchParams<{ apiResponse: string }>();
+  const { top } = useSafeAreaInsets();
 
   const analysisData = useMemo(() => {
     try {
@@ -113,7 +115,14 @@ export default function PredictedPh() {
   if (!analysisData) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
+        <View
+          style={[
+            styles.header,
+            {
+              paddingTop: top,
+            },
+          ]}
+        >
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.backButton}
@@ -135,7 +144,14 @@ export default function PredictedPh() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: top,
+          },
+        ]}
+      >
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backButton}
@@ -225,7 +241,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.default.primary,
     width: "100%",
     paddingLeft: 16,
-    paddingTop: 60,
     paddingBottom: 12,
     alignItems: "flex-start",
   },

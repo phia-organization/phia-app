@@ -5,23 +5,28 @@ import { emitCameraTakePhoto } from "@/utils/camera-events";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, usePathname, useRouter } from "expo-router";
 import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
   const router = useRouter();
   const pathname = usePathname();
+  const { bottom } = useSafeAreaInsets();
+
+  const TAB_BAR_HEIGHT = Dimensions.get("window").height * 0.11;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarBackground: () => <TabBarBackground />,
+        tabBarBackground: () => <TabBarBackground height={TAB_BAR_HEIGHT} />,
         tabBarStyle: {
           position: "absolute",
           bottom: 0,
           left: 0,
           right: 0,
-          height: 85,
+          height: TAB_BAR_HEIGHT,
+          paddingBottom: bottom,
           backgroundColor: "transparent",
           borderWidth: 0,
           elevation: 0,
@@ -104,7 +109,7 @@ const styles = StyleSheet.create({
   cameraButton: {
     width: 60,
     height: 60,
-    borderRadius: "40%",
+    borderRadius: 40, // É melhor usar número para 'borderRadius' em vez de '%' para círculos
     backgroundColor: Colors.default.accent,
     justifyContent: "center",
     alignItems: "center",
